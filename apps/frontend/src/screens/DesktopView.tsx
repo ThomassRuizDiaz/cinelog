@@ -428,36 +428,57 @@ function DeskAdd({ onClose, onSavedToLibrary, onSavedToWatchlist, onRateAfter, i
 
   return (
     <div onClick={onClose} style={{ position: 'absolute', inset: 0, zIndex: 75, display: 'grid', placeItems: 'center', background: 'rgba(6,6,9,0.75)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', animation: 'fadeIn 240ms ease both' }}>
-      <div onClick={e => e.stopPropagation()} style={{ width: 580, maxHeight: '84vh', display: 'flex', flexDirection: 'column', borderRadius: 24, overflow: 'hidden', background: 'var(--ink-850)', border: '1px solid var(--line-strong)', boxShadow: 'var(--shadow-pop)', animation: 'fadeUp 320ms var(--ease-out) both' }}>
+      <div onClick={e => e.stopPropagation()} style={{ position: 'relative', width: 720, maxHeight: '84vh', display: 'flex', flexDirection: 'column', borderRadius: 24, overflow: 'hidden', background: 'var(--ink-850)', border: '1px solid var(--line-strong)', boxShadow: 'var(--shadow-pop)', animation: 'fadeUp 320ms var(--ease-out) both' }}>
         {/* header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 24px', borderBottom: '1px solid var(--line)', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             {step !== 'search' && <button className="pressable cl-tap" onClick={() => setStep(step === 'entry' ? 'confirm' : 'search')} style={{ border: '1px solid var(--line-strong)', background: 'var(--ink-800)', borderRadius: 10, width: 32, height: 32, display: 'grid', placeItems: 'center', cursor: 'pointer', color: 'var(--text-dim)' }}><Icon name="back" size={16} color="currentColor" /></button>}
-            <div className="display" style={{ fontSize: 19, fontWeight: 700 }}>{stepLabel}</div>
+            <div>
+              <div className="display" style={{ fontSize: 19, fontWeight: 700 }}>{stepLabel}</div>
+              {step === 'search' && <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-faint)', marginTop: 2, letterSpacing: '0.06em' }}>BUSCAR PELÍCULA</div>}
+            </div>
           </div>
           <button onClick={onClose} className="pressable cl-tap" style={{ width: 34, height: 34, borderRadius: 10, border: '1px solid var(--line-strong)', background: 'var(--ink-800)', color: 'var(--text-dim)', display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
             <Icon name="close" size={17} color="currentColor" />
           </button>
         </div>
 
-        {/* content */}
-        <div className="cl-scroll" style={{ flex: 1, padding: '18px 24px' }}>
+        {/* content — flex: 1 + minHeight: 0 required for scroll to work inside a flex column with maxHeight */}
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', scrollbarWidth: 'none', padding: '18px 24px' }}>
 
           {/* SEARCH */}
           {step === 'search' && (
             <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 14px', height: 46, borderRadius: 13, background: 'var(--ink-820)', border: '1px solid var(--line-strong)', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 14px', height: 46, borderRadius: 13, background: 'var(--ink-820)', border: '1px solid var(--line-strong)', marginBottom: 12 }}>
                 <Icon name="search" size={17} color="var(--text-faint)" />
                 <input autoFocus value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder="Buscar en TMDb…" style={{ flex: 1, border: 'none', background: 'none', outline: 'none', color: 'var(--text)', fontFamily: 'var(--font-sans)', fontSize: 14 }} />
                 {searchQ && <button onClick={() => setSearchQ('')} style={{ border: 'none', background: 'none', color: 'var(--text-faint)', cursor: 'pointer', fontSize: 16, padding: 0 }}>×</button>}
               </div>
+
+              {/* status row */}
               {searchState === 'loading' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {[1,2,3].map(i => <div key={i} style={{ height: 62, borderRadius: 13, background: 'var(--ink-820)', animation: `glowPulse 1.8s ease ${i*100}ms infinite` }} />)}
-                </div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: 'var(--text-faint)', letterSpacing: '0.08em', padding: '6px 2px 10px' }}>Buscando…</div>
+              )}
+              {searchState === 'loaded' && searchResults.length > 0 && (
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: 'var(--text-faint)', letterSpacing: '0.08em', padding: '6px 2px 10px' }}>{searchResults.length} resultado{searchResults.length !== 1 ? 's' : ''}</div>
               )}
               {searchState === 'loaded' && searchResults.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '30px 0', color: 'var(--text-faint)', fontFamily: 'var(--font-display)', fontStyle: 'italic' }}>Sin resultados. Prueba otro título.</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: 'var(--text-faint)', letterSpacing: '0.08em', padding: '6px 2px 10px' }}>Sin resultados</div>
+              )}
+              {searchState === 'error' && (
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: '#d07070', letterSpacing: '0.08em', padding: '6px 2px 10px' }}>Error al buscar</div>
+              )}
+
+              {searchState === 'loading' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {[1,2,3].map(i => <div key={i} style={{ height: 72, borderRadius: 13, background: 'var(--ink-820)', animation: `glowPulse 1.8s ease ${i*100}ms infinite` }} />)}
+                </div>
+              )}
+              {searchState === 'loaded' && searchResults.length === 0 && searchQ.trim() && (
+                <div style={{ textAlign: 'center', padding: '30px 0', color: 'var(--text-faint)', fontFamily: 'var(--font-display)', fontStyle: 'italic' }}>Prueba con otro título o año.</div>
+              )}
+              {searchState === 'error' && (
+                <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-faint)', fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 14 }}>No se pudo conectar con TMDb. Inténtalo de nuevo.</div>
               )}
               {searchState === 'loaded' && searchResults.length > 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -465,11 +486,11 @@ function DeskAdd({ onClose, onSavedToLibrary, onSavedToWatchlist, onRateAfter, i
                     const director = r.directors[0] ?? '—';
                     const palette = derivePalette(r.title, r.releaseYear);
                     return (
-                      <button key={r.externalId} className="pressable cl-tap" onClick={() => { setSel({ movieId: null, title: r.title, year: r.releaseYear, director, genres: r.genres, poster: palette, posterUrl: r.posterUrl, externalResult: r }); setStep('confirm'); setWlState('idle'); setSubmitState('idle'); }} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: 10, border: 'none', borderRadius: 13, background: 'var(--ink-820)', color: 'var(--text)', textAlign: 'left', cursor: 'pointer' }}>
-                        <MoviePoster title={r.title} year={r.releaseYear} genres={r.genres} director={director} palette={palette} posterUrl={r.posterUrl} width={46} rounded={8} />
+                      <button key={r.externalId} className="pressable cl-tap" onClick={() => { setSel({ movieId: null, title: r.title, year: r.releaseYear, director, genres: r.genres, poster: palette, posterUrl: r.posterUrl, externalResult: r }); setStep('confirm'); setWlState('idle'); setSubmitState('idle'); }} style={{ display: 'flex', gap: 14, alignItems: 'center', padding: '10px 12px', border: '1px solid var(--line)', borderRadius: 14, background: 'var(--ink-820)', color: 'var(--text)', textAlign: 'left', cursor: 'pointer', width: '100%', boxSizing: 'border-box' }}>
+                        <MoviePoster title={r.title} year={r.releaseYear} genres={r.genres} director={director} palette={palette} posterUrl={r.posterUrl} width={52} rounded={9} />
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div className="display" style={{ fontSize: 15, fontWeight: 600 }}>{r.title}</div>
-                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, color: 'var(--text-dim)', marginTop: 3 }}>{r.releaseYear} · {director}</div>
+                          <div className="display" style={{ fontSize: 15.5, fontWeight: 600 }}>{r.title}</div>
+                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-dim)', marginTop: 3 }}>{r.releaseYear} · {director}</div>
                           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-faint)', marginTop: 2 }}>{r.genres.slice(0,3).join(' · ')}</div>
                         </div>
                         <Icon name="chevron" size={16} color="var(--text-faint)" />
@@ -478,8 +499,8 @@ function DeskAdd({ onClose, onSavedToLibrary, onSavedToWatchlist, onRateAfter, i
                   })}
                 </div>
               )}
-              {!searchQ.trim() && (
-                <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text-faint)', fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 14 }}>
+              {!searchQ.trim() && searchState === 'idle' && (
+                <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-faint)', fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 14 }}>
                   Busca una película para añadirla al archivo o a tu Watchlist.
                 </div>
               )}
