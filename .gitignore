@@ -1,0 +1,28 @@
+# Local secrets
+.env
+.env.*
+!.env.example
+application-prod.yml
+!apps/backend/src/main/resources/application-prod.yml
+application-local-secrets.yml
+*.key
+*.pem
+
+# Java / Maven
+target/
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Local runtime
+/tmp/

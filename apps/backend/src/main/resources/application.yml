@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: cinelog-backend
+  profiles:
+    default: local
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+server:
+  error:
+    include-message: never
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        secure: false
+        same-site: lax
+
+cinelog:
+  admin:
+    username: ${CINELOG_ADMIN_USERNAME:}
+    password: ${CINELOG_ADMIN_PASSWORD:}
+    display-name: ${CINELOG_ADMIN_DISPLAY_NAME:}
+  tmdb:
+    api-key: ${TMDB_API_KEY:}
+    base-url: ${TMDB_BASE_URL:https://api.themoviedb.org/3}
+    poster-base-url: https://image.tmdb.org/t/p
+    poster-size: w500
+    timeout: 3s
+    max-search-results: 10
+  security:
+    remember-me-key: ${CINELOG_REMEMBER_ME_KEY:}
+    secure-cookies: false

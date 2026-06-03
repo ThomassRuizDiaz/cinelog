@@ -1,0 +1,192 @@
+/* ───────────────────────── CineLog — design tokens ───────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;0,6..96,600;0,6..96,700;0,6..96,800;1,6..96,500&family=Hanken+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Archivo:wght@500;600;700;800;900&display=swap');
+
+:root {
+  /* obsidian base */
+  --ink-900: #08080b;
+  --ink-870: #0b0b0f;
+  --ink-850: #0e0e13;
+  --ink-820: #131319;
+  --ink-800: #16161d;
+  --ink-760: #1c1c24;
+  --ink-720: #22222b;
+  --ink-680: #2a2a34;
+
+  --line:        rgba(240,236,228,0.075);
+  --line-strong: rgba(240,236,228,0.14);
+  --line-amber:  rgba(232,185,116,0.22);
+
+  /* warm off-white ink */
+  --text:       #f2eee6;
+  --text-dim:   #a8a294;
+  --text-faint: #6f6a5f;
+  --text-ghost: #4a463e;
+
+  /* accents — amber (scores/stars) + deep red (active/monolith) */
+  --amber:        #e8b974;
+  --amber-bright: #f7d6a0;
+  --amber-deep:   #c79a55;
+  --red:          #b8493f;
+  --red-bright:   #d26054;
+  --copper:       #c9743f;
+
+  /* accent is tweakable; defaults to amber */
+  --accent:        var(--amber);
+  --accent-bright: var(--amber-bright);
+  --accent-deep:   var(--amber-deep);
+
+  /* star color always amber regardless of accent */
+  --star: #e8b974;
+
+  /* type */
+  --font-display: 'Bodoni Moda', Georgia, serif;
+  --font-sans: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* radii */
+  --r-xs: 8px;
+  --r-sm: 12px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-xl: 30px;
+  --r-2xl: 38px;
+
+  /* shadow */
+  --shadow-card: 0 1px 0 rgba(255,255,255,0.03) inset, 0 18px 40px -20px rgba(0,0,0,0.8);
+  --shadow-poster: 0 30px 60px -24px rgba(0,0,0,0.85), 0 8px 18px -10px rgba(0,0,0,0.7);
+  --shadow-pop: 0 24px 60px -16px rgba(0,0,0,0.7);
+
+  /* ── Themeable glow / surface tokens ──
+   * Defined here as defaults; experimental themes override via class selector.
+   * Using raw rgba so values stay identical to previous hardcoded values.
+   */
+  --accent-glow:  rgba(232, 185, 116, 0.30);  /* ambient glow near accent (constellation, save ring) */
+  --rank-stroke:  rgba(184, 73, 63, 0.52);    /* WebkitTextStroke color for ranking numerals */
+  --nav-surface:  rgba(20, 20, 26, 0.72);     /* bottom navigation pill background */
+
+  /* motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast: 180ms;
+  --dur: 280ms;
+  --dur-slow: 460ms;
+
+  /*
+   * Safe areas — use env() so real device insets apply.
+   * max(..., fallback) ensures minimum padding on desktop / no-notch devices.
+   */
+  --safe-top: max(env(safe-area-inset-top), 44px);
+  /*
+   * --safe-bottom: use the real device inset; 0px fallback for desktop/no-notch.
+   * BottomNavigation uses this as paddingBottom to clear the home indicator.
+   * Do NOT add an artificial minimum — that creates false empty space in simulation.
+   */
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  /* Actual BottomNavigation content height = paddingTop(9) + pill(60) = 69px */
+  --nav-h: 69px;
+  /*
+   * Gap between the bottom of the floating nav pill and the viewport edge.
+   * Shrinks the raw safe-bottom by 28px for a compact low position while
+   * still clearing the home indicator gesture area.
+   * --safe-bottom 34px → gap = 6px  (iPhone with home indicator)
+   * --safe-bottom 0px  → gap = 4px  (desktop / no safe area)
+   */
+  --nav-bottom-gap: clamp(4px, calc(var(--safe-bottom) - 28px), 10px);
+
+  /* DEV layout tuning hooks — no-op defaults; JS overrides in DEV mode only */
+  --debug-nav-bottom-offset: 0px;
+  --debug-content-bottom-extra: 0px;
+
+  /* film grain — defined here so components don't need JS to set it */
+  --grain-url: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --grain-opacity: 0.05;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── shared app primitives ── */
+.cl-root {
+  position: fixed;
+  inset: 0;
+  background: var(--ink-900);
+  color: var(--text);
+  font-family: var(--font-sans);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* film grain overlay */
+.cl-grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  background-image: var(--grain-url);
+  background-size: 200px 200px;
+  opacity: var(--grain-opacity, 0.05);
+  mix-blend-mode: soft-light;
+}
+
+/* scroll region */
+.cl-scroll {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.cl-scroll::-webkit-scrollbar { width: 0; height: 0; }
+
+/* suppress iOS tap highlight */
+.cl-tap { -webkit-tap-highlight-color: transparent; }
+
+/* press feedback */
+.pressable {
+  transition: transform var(--dur-fast) var(--ease-out), opacity var(--dur-fast) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+.pressable:active { transform: scale(0.97); opacity: 0.92; }
+
+/* eyebrow / label text */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  font-weight: 500;
+}
+
+.display { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.01em; }
+
+/* tabular numerics */
+.tnum { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes glowPulse {
+  0%,100% { opacity: 0.55; }
+  50%     { opacity: 0.85; }
+}
+@keyframes sheen {
+  from { background-position: -120% 0; }
+  to   { background-position: 220% 0; }
+}
+@keyframes deskDrawer {
+  from { transform: translateX(40px); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}

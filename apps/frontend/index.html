@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+
+  <!-- viewport-fit=cover required for Dynamic Island / notch safe-area insets -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+
+  <!-- PWA / iOS Home Screen -->
+  <meta name="theme-color" content="#08080b" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Cinelog" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="description" content="Private cinematic archive" />
+
+  <!-- PWA manifest -->
+  <link rel="manifest" href="/manifest.json" />
+
+  <!-- iOS Home Screen icon — 180x180 PNG required for apple-touch-icon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-180x180.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/pwa-192x192.png" />
+  <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+
+  <title>Cinelog</title>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+@import './tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  height: 100%;
+  /* -webkit-fill-available: iOS Safari/PWA reports real visual viewport height */
+  height: -webkit-fill-available;
+}
+
+body {
+  margin: 0;
+  background: var(--ink-900);
+  overscroll-behavior: none;
+  overflow: hidden;
+  /* Layer: 100% (from html), then upgrade to dynamic viewport units if supported */
+  height: 100%;
+  min-height: 100dvh;
+}
+
+#root {
+  height: 100%;
+}
+
+/* DEV layout debug — html height mode classes; applied via JS in DEV mode only */
+html.cl-debug-h-dvh  { height: 100dvh !important; }
+html.cl-debug-h-svh  { height: 100svh !important; }
+html.cl-debug-h-fill { height: -webkit-fill-available !important; }
+
+/*
+ * Reduce motion — respect user preference.
+ * All transitions / animations defined in tokens.css still apply
+ * unless the user has enabled prefers-reduced-motion.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

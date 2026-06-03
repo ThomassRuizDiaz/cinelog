@@ -1,0 +1,30 @@
+spring:
+  datasource:
+    url: jdbc:mariadb://${CINELOG_DB_HOST}:${CINELOG_DB_PORT}/${CINELOG_DB_NAME}
+    username: ${CINELOG_DB_USERNAME}
+    password: ${CINELOG_DB_PASSWORD}
+  flyway:
+    enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: validate
+server:
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        secure: true
+        same-site: lax
+
+cinelog:
+  tmdb:
+    api-key: ${TMDB_API_KEY}
+  security:
+    remember-me-key: ${CINELOG_REMEMBER_ME_KEY}
+    secure-cookies: true
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

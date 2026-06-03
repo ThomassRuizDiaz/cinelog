@@ -1,0 +1,7 @@
+CREATE TABLE persistent_logins (
+    username VARCHAR(100) NOT NULL,
+    series VARCHAR(64) NOT NULL,
+    token VARCHAR(64) NOT NULL,
+    last_used TIMESTAMP(6) NOT NULL,
+    CONSTRAINT pk_persistent_logins PRIMARY KEY (series)
+);

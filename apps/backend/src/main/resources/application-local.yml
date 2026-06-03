@@ -1,0 +1,7 @@
+spring:
+  datasource:
+    url: jdbc:mariadb://${CINELOG_DB_HOST:localhost}:${CINELOG_DB_PORT:3306}/${CINELOG_DB_NAME:cinelog}
+    username: ${CINELOG_DB_USERNAME:cinelog}
+    password: ${CINELOG_DB_PASSWORD:}
+  flyway:
+    enabled: true

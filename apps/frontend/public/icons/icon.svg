@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="38" fill="#08080b"/>
+  <rect x="56" y="30" width="80" height="118" rx="10" fill="#1c2b30" stroke="#e8b974" stroke-width="2.6"/>
+  <!-- projector light -->
+  <ellipse cx="80" cy="62" rx="34" ry="24" fill="#e8b97422"/>
+  <!-- star -->
+  <path d="M96 52l4.5 9.6 10.5 1.2-7.7 7 2.1 10.4L96 75.2l-9.4 5 2.1-10.4-7.7-7 10.5-1.2z" fill="#e8b974"/>
+  <!-- hairline rule -->
+  <rect x="72" y="104" width="48" height="1.5" rx="0.75" fill="#e8b97499"/>
+  <!-- title text -->
+  <text x="96" y="124" text-anchor="middle" font-family="Georgia, serif" font-size="16" fill="#ece4d4" font-weight="700" letter-spacing="-0.3">The Prestige</text>
+  <text x="96" y="138" text-anchor="middle" font-family="monospace" font-size="8.5" fill="#a8a29466" letter-spacing="1.5">CHRISTOPHER NOLAN</text>
+  <!-- wordmark -->
+  <text x="96" y="174" text-anchor="middle" font-family="Georgia, serif" font-size="20" fill="#e8b974" font-style="italic" font-weight="700">Cinelog</text>
+</svg>
