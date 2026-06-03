@@ -99,7 +99,7 @@ export default function RankingsScreen({ onOpenMovie }: RankingsScreenProps) {
     return (
       <SafeAreaScreen withBottomNav>
         <div style={{ padding: 'calc(var(--safe-top) + 4px) 20px 2px' }}>
-          <div className="eyebrow" style={{ marginBottom: 6 }}>The Archive, ranked</div>
+          <div className="eyebrow" style={{ marginBottom: 6 }}>El archivo, ordenado</div>
           <div className="display" style={{ fontSize: 30, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 0.95 }}>Rankings</div>
         </div>
         <div style={{ padding: '14px 0 6px' }}>
@@ -123,7 +123,7 @@ export default function RankingsScreen({ onOpenMovie }: RankingsScreenProps) {
     return (
       <SafeAreaScreen withBottomNav>
         <div style={{ padding: 'calc(var(--safe-top) + 4px) 20px 2px' }}>
-          <div className="eyebrow" style={{ marginBottom: 6 }}>The Archive, ranked</div>
+          <div className="eyebrow" style={{ marginBottom: 6 }}>El archivo, ordenado</div>
           <div className="display" style={{ fontSize: 30, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 0.95 }}>Rankings</div>
         </div>
         <div style={{ padding: '14px 0 6px' }}>
@@ -143,7 +143,7 @@ export default function RankingsScreen({ onOpenMovie }: RankingsScreenProps) {
   return (
     <SafeAreaScreen withBottomNav>
       <div style={{ padding: 'calc(var(--safe-top) + 4px) 20px 2px' }}>
-        <div className="eyebrow" style={{ marginBottom: 6 }}>The Archive, ranked</div>
+        <div className="eyebrow" style={{ marginBottom: 6 }}>El archivo, ordenado</div>
         <div className="display" style={{ fontSize: 30, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 0.95 }}>Rankings</div>
       </div>
 

@@ -4,11 +4,13 @@ import type { TabId } from './components';
 import ScreenLayer from './navigation/ScreenLayer';
 import HomeScreen from './screens/HomeScreen';
 import LibraryScreen from './screens/LibraryScreen';
+import WatchlistScreen from './screens/WatchlistScreen';
 import RankingsScreen from './screens/RankingsScreen';
 import AddScreen from './screens/AddScreen';
 import DetailScreen from './screens/DetailScreen';
 import RatingScreen from './screens/RatingScreen';
 import SettingsScreen from './screens/SettingsScreen';
+import GptExportScreen from './screens/GptExportScreen';
 import DesktopView from './screens/DesktopView';
 import LoginScreen from './screens/LoginScreen';
 import { AuthProvider } from './contexts/AuthContext';
@@ -34,6 +36,7 @@ export default function App() {
   const [ratingSource, setRatingSource] = useState<'add' | 'detail' | null>(null);
   const [ratingInitialData, setRatingInitialData] = useState<InitialRatingData | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [gptExportOpen, setGptExportOpen] = useState(false);
   const [logWatchMovie, setLogWatchMovie] = useState<MockMovie | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -177,6 +180,14 @@ export default function App() {
     case 'library':
       tabScreen = <LibraryScreen onOpenMovie={handleOpenMovie} />;
       break;
+    case 'watchlist':
+      tabScreen = (
+        <WatchlistScreen
+          onTabChange={handleTabChange}
+          onRateAfterConvert={handleRateAfterWatch}
+        />
+      );
+      break;
     case 'rankings':
       tabScreen = <RankingsScreen onOpenMovie={handleOpenMovie} />;
       break;
@@ -186,6 +197,10 @@ export default function App() {
           key={logWatchMovie?.id ?? 'search'}
           onRateAfterWatch={handleRateAfterWatch}
           onSaved={handleSaved}
+          onSavedToWatchlist={(title) => {
+            handleTabChange('watchlist');
+            if (title) showToast(`${title} guardada en Watchlist`);
+          }}
           initialStep={logWatchMovie ? 'entry' : 'search'}
           initialLibraryMovie={logWatchMovie ?? undefined}
           onCancel={logWatchMovie ? () => { setLogWatchMovie(null); handleTabChange('library'); } : undefined}
@@ -212,7 +227,18 @@ export default function App() {
               onBack={() => setSettingsOpen(false)}
               currentUser={currentUser ?? undefined}
               onLogout={handleLogout}
+              onOpenGptExport={() => setGptExportOpen(true)}
             />
+          )}
+        />
+
+        {/* GPT export (push, above settings) */}
+        <ScreenLayer
+          content={gptExportOpen ? true : null}
+          anim="push"
+          zIndex={41}
+          render={() => (
+            <GptExportScreen onBack={() => setGptExportOpen(false)} />
           )}
         />
 

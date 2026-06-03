@@ -9,21 +9,48 @@ interface SettingsScreenProps {
   onBack: () => void;
   currentUser?: AuthStatus;
   onLogout?: () => void;
+  onOpenGptExport?: () => void;
 }
 
 interface RowProps {
   label: string;
-  value: string | number;
+  value?: string | number;
   last?: boolean;
+  onPress?: () => void;
 }
 
-function Row({ label, value, last }: RowProps) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '15px 16px', borderBottom: last ? 'none' : '1px solid var(--line)' }}>
+function Row({ label, value, last, onPress }: RowProps) {
+  const inner = (
+    <>
       <span style={{ fontSize: 14.5 }}>{label}</span>
-      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-dim)', letterSpacing: '0.04em' }}>{value}</span>
-    </div>
+      {value != null && (
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-dim)', letterSpacing: '0.04em' }}>
+          {value}
+        </span>
+      )}
+      {onPress && <Icon name="chevron" size={15} color="var(--text-ghost)" stroke={2} />}
+    </>
   );
+
+  const base: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    padding: '15px 16px',
+    borderBottom: last ? 'none' : '1px solid var(--line)',
+    gap: 8,
+  };
+
+  if (onPress) {
+    return (
+      <button
+        className="pressable cl-tap"
+        onClick={onPress}
+        style={{ ...base, width: '100%', background: 'none', border: 'none', borderBottom: last ? 'none' : '1px solid var(--line)', color: 'var(--text)', textAlign: 'left', cursor: 'pointer' }}
+      >
+        {inner}
+      </button>
+    );
+  }
+  return <div style={base}>{inner}</div>;
 }
 
 interface GroupProps {
@@ -47,7 +74,7 @@ function fmt1(n: number | null | undefined): string {
   return n.toFixed(1);
 }
 
-export default function SettingsScreen({ onBack, currentUser, onLogout }: SettingsScreenProps) {
+export default function SettingsScreen({ onBack, currentUser, onLogout, onOpenGptExport }: SettingsScreenProps) {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [topTitle, setTopTitle] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -64,7 +91,6 @@ export default function SettingsScreen({ onBack, currentUser, onLogout }: Settin
   }, []);
 
   const displayName = currentUser?.displayName ?? currentUser?.username ?? null;
-
   const dash = (v: string | number) => loading ? '…' : v;
 
   return (
@@ -90,39 +116,29 @@ export default function SettingsScreen({ onBack, currentUser, onLogout }: Settin
 
       <Group header="Archivo">
         <Row label="Películas registradas" value={dash(stats?.totalMovies ?? 0)} />
-        <Row label="Total visionados" value={dash(stats?.totalWatchEntries ?? 0)} />
-        <Row label="Revisionados" value={dash(stats?.totalRewatches ?? 0)} />
-        <Row label="Media personal" value={dash(`${fmt1(stats?.averagePersonalScore)}★`)} />
-        <Row label="Media técnica" value={dash(`${fmt1(stats?.averageTechnicalScore)}★`)} />
-        <Row label="Top personal" value={dash(topTitle ? `${topTitle}` : '—')} last />
+        <Row label="Total visionados"       value={dash(stats?.totalWatchEntries ?? 0)} />
+        <Row label="Revisionados"           value={dash(stats?.totalRewatches ?? 0)} />
+        <Row label="Media personal"         value={dash(`${fmt1(stats?.averagePersonalScore)}★`)} />
+        <Row label="Media técnica"          value={dash(`${fmt1(stats?.averageTechnicalScore)}★`)} />
+        <Row label="Top personal"           value={dash(topTitle ?? '—')} last />
       </Group>
 
-      <Group header="Perfil de puntuación">
-        <Row label="Categorías" value="9 (Story → Impact)" />
-        <Row label="Suma de pesos" value="100%" />
-        <Row label="Motor de puntuación" value="Frontend preview only" />
-        <Row label="Puntuación backend" value="Authoritative" last />
-      </Group>
-
-      <Group header="Design System">
-        <Row label="Display face" value="Bodoni Moda" />
-        <Row label="Body" value="Hanken Grotesk" />
-        <Row label="Monospace" value="JetBrains Mono" />
-        <Row label="Accent" value="Amber #e8b974" />
-        <Row label="Base" value="Obsidian #08080b" last />
+      <Group header="Recomendaciones">
+        <Row
+          label="Exportar para ChatGPT"
+          onPress={onOpenGptExport}
+          last
+        />
       </Group>
 
       <Group header="App">
         <Row label="Versión" value="0.1.0" />
-        <Row label="Fase" value="v1 · integrada" />
-        <Row label="Stack" value="React · TS · Tailwind · Vite" />
-        <Row label="PWA" value="Manifest · Service worker" last />
+        <Row label="PWA"     value="Manifest · SW" last />
       </Group>
 
       <Group header="Datos">
-        <Row label="Fuente de metadatos" value="TMDb · English" />
-        <Row label="Auth" value="Sesión · HttpOnly cookies" />
-        <Row label="Backend API" value="Activo" last />
+        <Row label="Metadatos" value="TMDb · English" />
+        <Row label="Auth"      value="Sesión · HttpOnly" last />
       </Group>
 
       {/* DEV-only: PWA diagnostics */}
@@ -145,7 +161,7 @@ export default function SettingsScreen({ onBack, currentUser, onLogout }: Settin
               <Icon name="add" size={14} color="currentColor" stroke={2} />
             </button>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-faint)', marginTop: 8, lineHeight: 1.5 }}>
-              Solo visible en modo DEV. Ajuste en vivo: safe-area, nav offset, content padding, height mode.
+              Solo visible en modo DEV.
             </div>
           </div>
         </Group>
@@ -172,11 +188,7 @@ export default function SettingsScreen({ onBack, currentUser, onLogout }: Settin
         </div>
       )}
 
-      <div style={{ textAlign: 'center', padding: '26px 20px 0', fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 13, color: 'var(--text-faint)', lineHeight: 1.5 }}>
-        &ldquo;Cada película vista tiene peso, memoria y significado.&rdquo;
-      </div>
-
-      {/* DEV-only panel overlay — production: import.meta.env.DEV is false, branch dead-eliminated */}
+      {/* DEV-only panel overlay */}
       {import.meta.env.DEV && debugPanelOpen && (
         <PwaDiagnosticPanel onClose={() => setDebugPanelOpen(false)} />
       )}

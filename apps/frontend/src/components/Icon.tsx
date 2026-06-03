@@ -1,5 +1,5 @@
 export type IconName =
-  | 'home' | 'library' | 'rankings' | 'add' | 'search'
+  | 'home' | 'library' | 'rankings' | 'add' | 'watchlist' | 'search'
   | 'back' | 'close' | 'home-loc' | 'cinema' | 'rewatch'
   | 'first' | 'play' | 'star' | 'chevron' | 'chevdown'
   | 'edit' | 'cog' | 'calendar' | 'grid2' | 'list'
@@ -23,6 +23,7 @@ export default function Icon({ name, size = 22, stroke = 2, color = 'currentColo
     case 'library':  return <svg {...p}><rect x="3.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.4"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.4"/></svg>;
     case 'rankings': return <svg {...p}><path d="M5 20V11"/><path d="M12 20V4"/><path d="M19 20v-6"/></svg>;
     case 'add':      return <svg {...p}><path d="M12 5v14"/><path d="M5 12h14"/></svg>;
+    case 'watchlist': return <svg {...p}><path d="M6 3h12v18l-6-3.6L6 21V3z"/></svg>;
     case 'search':   return <svg {...p}><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>;
     case 'back':     return <svg {...p}><path d="M15 5l-7 7 7 7"/></svg>;
     case 'close':    return <svg {...p}><path d="M6 6l12 12M18 6 6 18"/></svg>;

@@ -1,18 +1,19 @@
 import Icon from './Icon';
 
-export type TabId = 'home' | 'library' | 'rankings' | 'add';
+export type TabId = 'home' | 'library' | 'watchlist' | 'rankings' | 'add';
 
 interface NavItem {
   id: TabId;
-  icon: 'home' | 'library' | 'rankings' | 'add';
+  icon: 'home' | 'library' | 'watchlist' | 'rankings' | 'add';
   label: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'home',     icon: 'home',     label: 'Home' },
-  { id: 'library',  icon: 'library',  label: 'Library' },
-  { id: 'rankings', icon: 'rankings', label: 'Rankings' },
-  { id: 'add',      icon: 'add',      label: 'Add' },
+  { id: 'home',      icon: 'home',      label: 'Home' },
+  { id: 'library',   icon: 'library',   label: 'Library' },
+  { id: 'watchlist', icon: 'watchlist', label: 'Watchlist' },
+  { id: 'rankings',  icon: 'rankings',  label: 'Rankings' },
+  { id: 'add',       icon: 'add',       label: 'Add' },
 ];
 
 interface BottomNavigationProps {

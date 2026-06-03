@@ -51,7 +51,7 @@ public class SecurityConfig {
             PersistentTokenRepository tokenRepository) {
         Assert.hasText(rememberMeKey, "CINELOG_REMEMBER_ME_KEY must be configured");
         PersistentTokenBasedRememberMeServices services =
-                new PersistentTokenBasedRememberMeServices(rememberMeKey, userAccountService, tokenRepository);
+                new GracefulPersistentTokenRememberMeServices(rememberMeKey, userAccountService, tokenRepository);
         services.setCookieName("CINELOG_REMEMBER_ME");
         services.setAlwaysRemember(true);
         services.setUseSecureCookie(secureCookies);

@@ -242,6 +242,28 @@ class AuthSecurityIntegrationTests {
     }
 
     @Test
+    void staleRememberMeCookieReturnsJsonUnauthorizedAndClearsCookie() throws Exception {
+        MvcResult login = login("""
+                {
+                  "username": "admin",
+                  "password": "correct-password",
+                  "rememberMe": true
+                }
+                """);
+        Cookie rememberMeCookie = login.getResponse().getCookie("CINELOG_REMEMBER_ME");
+        assertThat(rememberMeCookie).isNotNull();
+
+        jdbcClient.sql("UPDATE persistent_logins SET token = 'stale-token-value'").update();
+
+        mockMvc.perform(get("/api/movies").cookie(rememberMeCookie))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Unauthorized"))
+                .andExpect(jsonPath("$.message").value("Authentication is required"))
+                .andExpect(jsonPath("$.path").value("/api/movies"))
+                .andExpect(cookie().maxAge("CINELOG_REMEMBER_ME", 0));
+    }
+
+    @Test
     void passwordIsStoredAsBcryptHash() {
         UserAccount account = userAccountRepository.findByUsername("admin").orElseThrow();
 

@@ -34,7 +34,7 @@ public class MovieMetadataReader {
         }
     }
 
-    private List<String> readList(String json) {
+    public List<String> readList(String json) {
         if (json == null || json.isBlank()) {
             return Collections.emptyList();
         }

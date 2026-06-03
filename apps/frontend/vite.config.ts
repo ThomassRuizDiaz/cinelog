@@ -22,9 +22,16 @@ export default defineConfig({
         // cache app shell and static assets only
         globPatterns: ['**/*.{js,css,html,svg,woff,woff2}'],
         navigateFallback: '/index.html',
-        // never intercept API calls
+        // never intercept /api navigation
         navigateFallbackDenylist: [/^\/api\//],
+        // remove stale precache entries on update
+        cleanupOutdatedCaches: true,
         runtimeCaching: [
+          {
+            // Belt-and-suspenders: never cache any /api request at runtime either
+            urlPattern: /^\/api\//,
+            handler: 'NetworkOnly',
+          },
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com/,
             handler: 'StaleWhileRevalidate',
@@ -36,6 +43,16 @@ export default defineConfig({
             options: {
               cacheName: 'google-fonts-webfonts',
               expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
+            },
+          },
+          {
+            // TMDb poster CDN — safe public images, not authenticated
+            urlPattern: /^https:\/\/image\.tmdb\.org\/t\/p\//,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'tmdb-posters',
+              expiration: { maxEntries: 300, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] },
             },
           },
         ],

@@ -43,7 +43,7 @@ class ExternalMovieControllerIntegrationTests {
     static void tmdbProperties(DynamicPropertyRegistry registry) {
         registry.add("cinelog.tmdb.api-key", () -> "test-api-key");
         registry.add("cinelog.tmdb.base-url", () -> "http://localhost:" + TMDB_SERVER.getAddress().getPort() + "/3");
-        registry.add("cinelog.tmdb.timeout", () -> "100ms");
+        registry.add("cinelog.tmdb.timeout", () -> "1s");
         registry.add("cinelog.tmdb.max-search-results", () -> "10");
     }
 
@@ -256,7 +256,7 @@ class ExternalMovieControllerIntegrationTests {
             }
             if (query.contains("query=timeout")) {
                 try {
-                    Thread.sleep(300);
+                    Thread.sleep(1500);
                 } catch (InterruptedException exception) {
                     Thread.currentThread().interrupt();
                 }

@@ -250,7 +250,7 @@ export default function DetailScreen({ movie: initialMovie, onBack, onRate, onLo
                 disabled={deleting}
                 style={{ flex: 1, border: '1px solid var(--line-strong)', background: 'var(--ink-800)', color: 'var(--text-dim)', borderRadius: 14, padding: '13px', fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
               >
-                Cancel
+                Cancelar
               </button>
               <button
                 className="pressable cl-tap"

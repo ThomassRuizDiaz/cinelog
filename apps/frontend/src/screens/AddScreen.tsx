@@ -9,6 +9,7 @@ import type { IconName } from '../components/Icon';
 import type { WatchLocation, WatchType } from '../types/watch';
 import { searchExternalMovies } from '../api/movies';
 import { importMovie, createWatchEntry } from '../api/watchEntries';
+import { addToWatchlist } from '../api/watchlist';
 import { ApiError } from '../api/errors';
 import { useAuth } from '../contexts/AuthContext';
 import { derivePalette, } from '../lib/posterPalette';
@@ -18,6 +19,7 @@ import { SEARCH_SUGGESTIONS } from '../data/mockSearchPool';
 interface AddScreenProps {
   onRateAfterWatch: (movie: MockMovie, watchEntryId: number) => void;
   onSaved: (title: string) => void;
+  onSavedToWatchlist?: (title: string) => void;
   initialStep?: AddStep;
   initialLibraryMovie?: MockMovie;
   /** Called when back is pressed in log-watch mode (existing library movie). */
@@ -60,7 +62,7 @@ function SegToggle({ options, value, onChange }: {
   );
 }
 
-export default function AddScreen({ onRateAfterWatch, onSaved, initialStep = 'search', initialLibraryMovie, onCancel }: AddScreenProps) {
+export default function AddScreen({ onRateAfterWatch, onSaved, onSavedToWatchlist, initialStep = 'search', initialLibraryMovie, onCancel }: AddScreenProps) {
   const { signOut } = useAuth();
 
   const [step, setStep] = useState<AddStep>(initialStep);
@@ -96,6 +98,35 @@ export default function AddScreen({ onRateAfterWatch, onSaved, initialStep = 'se
   /* ── Submit state ── */
   const [submitState, setSubmitState] = useState<'idle' | 'saving' | 'conflict' | 'error'>('idle');
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  /* ── Watchlist save state ── */
+  type WlState = 'idle' | 'saving' | 'saved' | 'conflict-watchlist' | 'conflict-library' | 'error';
+  const [wlState, setWlState] = useState<WlState>('idle');
+
+  const handleSaveToWatchlist = useCallback(async () => {
+    if (!sel?.externalResult) return;
+    setWlState('saving');
+    const r = sel.externalResult;
+    try {
+      await addToWatchlist({
+        source: r.source, externalId: r.externalId,
+        title: r.title, originalTitle: r.originalTitle,
+        releaseYear: r.releaseYear, directors: r.directors,
+        posterPath: r.posterPath, posterUrl: r.posterUrl,
+        genres: r.genres,
+      });
+      setWlState('saved');
+      setTimeout(() => { onSavedToWatchlist?.(r.title); }, 800);
+    } catch (err) {
+      if (err instanceof ApiError && err.isUnauthorized) { void signOut(); return; }
+      if (err instanceof ApiError && err.isConflict) {
+        const msg = err.message?.toLowerCase() ?? '';
+        setWlState(msg.includes('archive') ? 'conflict-library' : 'conflict-watchlist');
+      } else {
+        setWlState('error');
+      }
+    }
+  }, [sel, onSavedToWatchlist, signOut]);
 
   /* ── API search with 400ms debounce ── */
   useEffect(() => {
@@ -284,8 +315,38 @@ export default function AddScreen({ onRateAfterWatch, onSaved, initialStep = 'se
           <Icon name="dot" size={8} color="var(--accent)" />
         </div>
       </div>
-      <div style={{ padding: '22px 16px 0' }}>
-        <PrimaryButton onClick={() => setStep('entry')} icon="arrow" fullWidth>Continuar</PrimaryButton>
+      <div style={{ padding: '22px 16px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <PrimaryButton onClick={() => { setWlState('idle'); setStep('entry'); }} icon="arrow" fullWidth>Continuar</PrimaryButton>
+
+        {/* Only for external results (not library log-watch) */}
+        {sel.externalResult && (
+          <>
+            <SecondaryButton
+              fullWidth
+              disabled={wlState === 'saving' || wlState === 'saved'}
+              onClick={() => void handleSaveToWatchlist()}
+            >
+              {wlState === 'saving' ? 'Guardando…'
+                : wlState === 'saved' ? '✓ Guardado en Watchlist'
+                : 'Guardar en Watchlist'}
+            </SecondaryButton>
+            {(wlState === 'conflict-watchlist') && (
+              <div style={{ textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent)', letterSpacing: '0.04em' }}>
+                Ya está en tu Watchlist
+              </div>
+            )}
+            {(wlState === 'conflict-library') && (
+              <div style={{ textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-dim)', letterSpacing: '0.04em' }}>
+                Ya está en tu Library
+              </div>
+            )}
+            {(wlState === 'error') && (
+              <div style={{ textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 11, color: '#d07070', letterSpacing: '0.04em' }}>
+                Error al guardar. Inténtalo de nuevo.
+              </div>
+            )}
+          </>
+        )}
       </div>
     </SafeAreaScreen>
   );
