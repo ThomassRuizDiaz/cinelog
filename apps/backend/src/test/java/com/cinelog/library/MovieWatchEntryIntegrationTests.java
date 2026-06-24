@@ -2,7 +2,7 @@ package com.cinelog.library;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -10,7 +10,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.cinelog.external.tmdb.TmdbClient;
+import com.cinelog.actor.ActorRepository;
+import com.cinelog.actor.MovieCastMemberRepository;
+import com.cinelog.external.tmdb.TmdbCastImport;
+import com.cinelog.external.tmdb.TmdbCastImportService;
 import com.cinelog.movie.MetadataSource;
 import com.cinelog.movie.Movie;
 import com.cinelog.movie.MovieRepository;
@@ -64,10 +67,16 @@ class MovieWatchEntryIntegrationTests {
     private MovieRatingRepository movieRatingRepository;
 
     @Autowired
+    private ActorRepository actorRepository;
+
+    @Autowired
+    private MovieCastMemberRepository castMemberRepository;
+
+    @Autowired
     private MockMvc mockMvc;
 
     @MockitoBean
-    private TmdbClient tmdbClient;
+    private TmdbCastImportService tmdbCastImportService;
 
     @Test
     void createsUpdatesGetsListsAndDeletesManualMovie() {
@@ -95,20 +104,60 @@ class MovieWatchEntryIntegrationTests {
     }
 
     @Test
-    void importsNormalizedTmdbMovieWithoutCallingTmdbAndRejectsDuplicate() {
+    void importsNormalizedTmdbMovieWithCastAndRejectsDuplicate() throws Exception {
         ImportMovieRequest request = new ImportMovieRequest(
                 "TMDB", "1124", "The Prestige", "The Prestige", 2006,
                 List.of("Christopher Nolan"), "/poster.jpg", "https://image.tmdb.org/t/p/w500/poster.jpg",
                 List.of("Drama", "Mystery"));
+        when(tmdbCastImportService.topCast(1124L)).thenReturn(List.of(
+                new TmdbCastImport(100L, "Hugh Jackman", "Robert Angier", 0),
+                new TmdbCastImport(101L, "Christian Bale", "Alfred Borden", 1),
+                new TmdbCastImport(102L, "Michael Caine", "Cutter", 2)));
 
         MovieDetailResponse imported = movieService.importMovie(request);
 
         assertThat(imported.tmdbId()).isEqualTo(1124L);
         assertThat(imported.metadataSource()).isEqualTo(MetadataSource.TMDB);
+        assertThat(imported.cast()).extracting("name")
+                .containsExactly("Hugh Jackman", "Christian Bale", "Michael Caine");
+        assertThat(actorRepository.count()).isEqualTo(3);
+        assertThat(castMemberRepository.count()).isEqualTo(3);
+
+        mockMvc.perform(get("/api/movies/" + imported.id()).with(user("admin")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cast[0].name").value("Hugh Jackman"))
+                .andExpect(jsonPath("$.cast[0].characterName").value("Robert Angier"));
+
+        mockMvc.perform(get("/api/actors").with(user("admin")).param("query", "bale"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("Christian Bale"))
+                .andExpect(jsonPath("$[0].performanceCount").value(1));
+
+        Long actorId = imported.cast().get(1).actorId();
+        mockMvc.perform(get("/api/actors/" + actorId).with(user("admin")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Christian Bale"))
+                .andExpect(jsonPath("$.performances[0].title").value("The Prestige"))
+                .andExpect(jsonPath("$.performances[0].characterName").value("Alfred Borden"))
+                .andExpect(jsonPath("$.performances[0].activeRating").isEmpty());
+
+        ImportMovieRequest secondRequest = new ImportMovieRequest(
+                "TMDB", "2000", "Second Movie", "Second Movie", 2007,
+                List.of("Director"), "/second.jpg", "https://image.tmdb.org/t/p/w500/second.jpg",
+                List.of("Drama"));
+        when(tmdbCastImportService.topCast(2000L)).thenReturn(List.of(
+                new TmdbCastImport(101L, "Christian Bale", "Second Role", 0),
+                new TmdbCastImport(103L, "New Actor", "New Role", 1)));
+        movieService.importMovie(secondRequest);
+
+        assertThat(actorRepository.count()).isEqualTo(4);
+        assertThat(castMemberRepository.count()).isEqualTo(5);
+
         assertThatThrownBy(() -> movieService.importMovie(request))
                 .isInstanceOf(LibraryConflictException.class)
                 .hasMessageContaining("already exists");
-        verifyNoInteractions(tmdbClient);
+        assertThat(actorRepository.count()).isEqualTo(4);
+        assertThat(castMemberRepository.count()).isEqualTo(5);
     }
 
     @Test
