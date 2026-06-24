@@ -12,6 +12,14 @@ export default defineConfig({
       },
     },
   },
+
+  preview: {
+    host: '127.0.0.1',
+    port: 5174,
+    strictPort: true,
+    allowedHosts: ['cine.thomasruizdiaz.com'],
+  },
+
   plugins: [
     react(),
     VitePWA({
@@ -59,6 +67,7 @@ export default defineConfig({
       },
     }),
   ],
+
   test: {
     globals: true,
     environment: 'node',
