@@ -110,9 +110,9 @@ class MovieWatchEntryIntegrationTests {
                 List.of("Christopher Nolan"), "/poster.jpg", "https://image.tmdb.org/t/p/w500/poster.jpg",
                 List.of("Drama", "Mystery"));
         when(tmdbCastImportService.topCast(1124L)).thenReturn(List.of(
-                new TmdbCastImport(100L, "Hugh Jackman", "Robert Angier", 0),
-                new TmdbCastImport(101L, "Christian Bale", "Alfred Borden", 1),
-                new TmdbCastImport(102L, "Michael Caine", "Cutter", 2)));
+                new TmdbCastImport(100L, "Hugh Jackman", "Robert Angier", 0, "/hugh.jpg"),
+                new TmdbCastImport(101L, "Christian Bale", "Alfred Borden", 1, null),
+                new TmdbCastImport(102L, "Michael Caine", "Cutter", 2, "/michael.jpg")));
 
         MovieDetailResponse imported = movieService.importMovie(request);
 
@@ -120,23 +120,31 @@ class MovieWatchEntryIntegrationTests {
         assertThat(imported.metadataSource()).isEqualTo(MetadataSource.TMDB);
         assertThat(imported.cast()).extracting("name")
                 .containsExactly("Hugh Jackman", "Christian Bale", "Michael Caine");
+        assertThat(imported.cast().getFirst().profilePath()).isEqualTo("/hugh.jpg");
+        assertThat(imported.cast().getFirst().profileUrl()).isEqualTo("https://image.tmdb.org/t/p/w500/hugh.jpg");
         assertThat(actorRepository.count()).isEqualTo(3);
         assertThat(castMemberRepository.count()).isEqualTo(3);
 
         mockMvc.perform(get("/api/movies/" + imported.id()).with(user("admin")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.cast[0].name").value("Hugh Jackman"))
-                .andExpect(jsonPath("$.cast[0].characterName").value("Robert Angier"));
+                .andExpect(jsonPath("$.cast[0].characterName").value("Robert Angier"))
+                .andExpect(jsonPath("$.cast[0].profilePath").value("/hugh.jpg"))
+                .andExpect(jsonPath("$.cast[0].profileUrl").value("https://image.tmdb.org/t/p/w500/hugh.jpg"));
 
         mockMvc.perform(get("/api/actors").with(user("admin")).param("query", "bale"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].name").value("Christian Bale"))
-                .andExpect(jsonPath("$[0].performanceCount").value(1));
+                .andExpect(jsonPath("$[0].performanceCount").value(1))
+                .andExpect(jsonPath("$[0].profilePath").isEmpty())
+                .andExpect(jsonPath("$[0].profileUrl").isEmpty());
 
         Long actorId = imported.cast().get(1).actorId();
         mockMvc.perform(get("/api/actors/" + actorId).with(user("admin")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Christian Bale"))
+                .andExpect(jsonPath("$.profilePath").isEmpty())
+                .andExpect(jsonPath("$.profileUrl").isEmpty())
                 .andExpect(jsonPath("$.performances[0].title").value("The Prestige"))
                 .andExpect(jsonPath("$.performances[0].characterName").value("Alfred Borden"))
                 .andExpect(jsonPath("$.performances[0].activeRating").isEmpty());
@@ -146,12 +154,18 @@ class MovieWatchEntryIntegrationTests {
                 List.of("Director"), "/second.jpg", "https://image.tmdb.org/t/p/w500/second.jpg",
                 List.of("Drama"));
         when(tmdbCastImportService.topCast(2000L)).thenReturn(List.of(
-                new TmdbCastImport(101L, "Christian Bale", "Second Role", 0),
-                new TmdbCastImport(103L, "New Actor", "New Role", 1)));
+                new TmdbCastImport(101L, "Christian Bale", "Second Role", 0, "/bale.jpg"),
+                new TmdbCastImport(103L, "New Actor", "New Role", 1, "/new.jpg")));
         movieService.importMovie(secondRequest);
 
         assertThat(actorRepository.count()).isEqualTo(4);
         assertThat(castMemberRepository.count()).isEqualTo(5);
+        assertThat(actorRepository.findByTmdbId(101L).orElseThrow().getProfilePath()).isEqualTo("/bale.jpg");
+
+        mockMvc.perform(get("/api/actors/" + actorId).with(user("admin")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.profilePath").value("/bale.jpg"))
+                .andExpect(jsonPath("$.profileUrl").value("https://image.tmdb.org/t/p/w500/bale.jpg"));
 
         assertThatThrownBy(() -> movieService.importMovie(request))
                 .isInstanceOf(LibraryConflictException.class)

@@ -6,5 +6,7 @@ public record ActorDetailResponse(
         Long id,
         Long tmdbId,
         String name,
+        String profilePath,
+        String profileUrl,
         List<ActorPerformanceResponse> performances) {
 }

@@ -1,0 +1,2 @@
+ALTER TABLE actor
+    ADD COLUMN profile_path VARCHAR(500) NULL;

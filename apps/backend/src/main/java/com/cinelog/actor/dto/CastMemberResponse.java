@@ -5,5 +5,7 @@ public record CastMemberResponse(
         Long tmdbId,
         String name,
         String characterName,
-        int castOrder) {
+        int castOrder,
+        String profilePath,
+        String profileUrl) {
 }

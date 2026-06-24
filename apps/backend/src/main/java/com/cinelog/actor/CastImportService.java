@@ -5,6 +5,7 @@ import com.cinelog.movie.Movie;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Service
 public class CastImportService {
@@ -35,9 +36,22 @@ public class CastImportService {
     private Actor findOrCreateActor(TmdbCastImport castMember) {
         if (castMember.tmdbId() != null) {
             return actorRepository.findByTmdbId(castMember.tmdbId())
-                    .orElseGet(() -> actorRepository.save(new Actor(castMember.tmdbId(), castMember.name())));
+                    .map(actor -> fillMissingProfilePath(actor, castMember.profilePath()))
+                    .orElseGet(() -> actorRepository.save(new Actor(
+                            castMember.tmdbId(),
+                            castMember.name(),
+                            castMember.profilePath())));
         }
         return actorRepository.findFirstByNameIgnoreCase(castMember.name())
-                .orElseGet(() -> actorRepository.save(new Actor(null, castMember.name())));
+                .map(actor -> fillMissingProfilePath(actor, castMember.profilePath()))
+                .orElseGet(() -> actorRepository.save(new Actor(null, castMember.name(), castMember.profilePath())));
+    }
+
+    private Actor fillMissingProfilePath(Actor actor, String profilePath) {
+        if (!StringUtils.hasText(actor.getProfilePath()) && StringUtils.hasText(profilePath)) {
+            actor.setProfilePath(profilePath);
+            return actorRepository.save(actor);
+        }
+        return actor;
     }
 }

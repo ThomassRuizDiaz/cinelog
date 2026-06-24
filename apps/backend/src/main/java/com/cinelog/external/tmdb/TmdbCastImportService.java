@@ -36,7 +36,8 @@ public class TmdbCastImportService {
                             member.id(),
                             member.name().trim(),
                             StringUtils.hasText(member.character()) ? member.character().trim() : null,
-                            member.order() == null ? 0 : member.order()))
+                            member.order() == null ? 0 : member.order(),
+                            StringUtils.hasText(member.profilePath()) ? member.profilePath().trim() : null))
                     .toList();
         } catch (RuntimeException exception) {
             return List.of();

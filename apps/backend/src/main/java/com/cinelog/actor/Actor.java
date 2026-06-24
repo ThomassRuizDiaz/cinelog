@@ -24,6 +24,9 @@ public class Actor {
     @Column(nullable = false)
     private String name;
 
+    @Column(name = "profile_path")
+    private String profilePath;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -38,6 +41,12 @@ public class Actor {
     public Actor(Long tmdbId, String name) {
         this.tmdbId = tmdbId;
         this.name = name;
+    }
+
+    public Actor(Long tmdbId, String name, String profilePath) {
+        this.tmdbId = tmdbId;
+        this.name = name;
+        this.profilePath = profilePath;
     }
 
     public Long getId() {
@@ -58,6 +67,14 @@ public class Actor {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getProfilePath() {
+        return profilePath;
+    }
+
+    public void setProfilePath(String profilePath) {
+        this.profilePath = profilePath;
     }
 
     public LocalDateTime getCreatedAt() {
