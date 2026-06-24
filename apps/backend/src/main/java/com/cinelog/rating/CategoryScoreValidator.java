@@ -6,10 +6,10 @@ import java.math.BigDecimal;
 
 public class CategoryScoreValidator implements ConstraintValidator<CategoryScore, BigDecimal> {
 
-    private static final BigDecimal HALF_POINT = new BigDecimal("0.5");
+    private static final BigDecimal QUARTER_POINT = new BigDecimal("0.25");
 
     @Override
     public boolean isValid(BigDecimal value, ConstraintValidatorContext context) {
-        return value == null || value.remainder(HALF_POINT).compareTo(BigDecimal.ZERO) == 0;
+        return value == null || value.remainder(QUARTER_POINT).compareTo(BigDecimal.ZERO) == 0;
     }
 }

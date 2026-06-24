@@ -100,7 +100,7 @@ class RankingDashboardIntegrationTests {
         assertThat(rankings).extracting(RankingItemResponse::title)
                 .containsExactly("Personal Final", "Display Fallback");
         assertThat(rankings).extracting(RankingItemResponse::score)
-                .containsExactly(decimal("5.0"), decimal("4.5"));
+                .containsExactly(decimal("5.00"), decimal("4.50"));
 
         MovieRating incomplete = mock(MovieRating.class);
         when(incomplete.getTechnicalScore()).thenReturn(decimal("3.25"));

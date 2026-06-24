@@ -30,38 +30,38 @@ class ScoringServiceTests {
 
     @Test
     void calculatesTechnicalObjectiveAndDisplayScores() {
-        ScoreResult result = scoringService.calculate(validInput(new BigDecimal("5.0")), ratingProfile);
+        ScoreResult result = scoringService.calculate(validInput(new BigDecimal("10.00")), ratingProfile);
 
-        assertThat(result.technicalScore()).isEqualByComparingTo("4.62");
-        assertThat(result.objectiveScore()).isEqualByComparingTo("4.56");
-        assertThat(result.displayScore()).isEqualByComparingTo("4.5");
+        assertThat(result.technicalScore()).isEqualByComparingTo("9.23");
+        assertThat(result.objectiveScore()).isEqualByComparingTo("9.13");
+        assertThat(result.displayScore()).isEqualByComparingTo("9.25");
     }
 
     @Test
     void usesPersonalFinalThenDisplayThenTechnicalForPersonalRanking() {
         assertThat(scoringService.personalRankingScore(
-                new BigDecimal("5.0"), new BigDecimal("4.5"), new BigDecimal("4.62")))
-                .isEqualByComparingTo("5.0");
+                new BigDecimal("10.00"), new BigDecimal("9.25"), new BigDecimal("9.24")))
+                .isEqualByComparingTo("10.00");
         assertThat(scoringService.personalRankingScore(
-                null, new BigDecimal("4.5"), new BigDecimal("4.62")))
-                .isEqualByComparingTo("4.5");
+                null, new BigDecimal("9.25"), new BigDecimal("9.24")))
+                .isEqualByComparingTo("9.25");
         assertThat(scoringService.personalRankingScore(
-                null, null, new BigDecimal("4.62")))
-                .isEqualByComparingTo("4.62");
+                null, null, new BigDecimal("9.24")))
+                .isEqualByComparingTo("9.24");
     }
 
     @Test
     void rejectsMissingCategoryScore() {
         ScoreInput input = new ScoreInput(
                 null,
-                new BigDecimal("4.5"),
-                new BigDecimal("4.5"),
-                new BigDecimal("4.0"),
-                new BigDecimal("4.5"),
-                new BigDecimal("4.0"),
-                new BigDecimal("5.0"),
-                new BigDecimal("4.5"),
-                new BigDecimal("5.0"),
+                new BigDecimal("9.00"),
+                new BigDecimal("9.00"),
+                new BigDecimal("8.00"),
+                new BigDecimal("9.00"),
+                new BigDecimal("8.00"),
+                new BigDecimal("10.00"),
+                new BigDecimal("9.00"),
+                new BigDecimal("10.00"),
                 null);
 
         assertThatThrownBy(() -> scoringService.calculate(input, ratingProfile))
@@ -70,42 +70,42 @@ class ScoringServiceTests {
     }
 
     @Test
-    void rejectsCategoryScoreOutsideHalfPointIncrements() {
+    void rejectsCategoryScoreOutsideQuarterPointIncrements() {
         ScoreInput input = new ScoreInput(
-                new BigDecimal("4.3"),
-                new BigDecimal("4.5"),
-                new BigDecimal("4.5"),
-                new BigDecimal("4.0"),
-                new BigDecimal("4.5"),
-                new BigDecimal("4.0"),
-                new BigDecimal("5.0"),
-                new BigDecimal("4.5"),
-                new BigDecimal("5.0"),
+                new BigDecimal("9.10"),
+                new BigDecimal("9.00"),
+                new BigDecimal("9.00"),
+                new BigDecimal("8.00"),
+                new BigDecimal("9.00"),
+                new BigDecimal("8.00"),
+                new BigDecimal("10.00"),
+                new BigDecimal("9.00"),
+                new BigDecimal("10.00"),
                 null);
 
         assertThatThrownBy(() -> scoringService.calculate(input, ratingProfile))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("storyScreenplay must be a multiple of 0.5");
+                .hasMessageContaining("storyScreenplay must be a multiple of 0.25");
     }
 
     @Test
     void rejectsInvalidPersonalFinalScore() {
-        assertThatThrownBy(() -> scoringService.calculate(validInput(new BigDecimal("5.5")), ratingProfile))
+        assertThatThrownBy(() -> scoringService.calculate(validInput(new BigDecimal("10.25")), ratingProfile))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("personalFinalScore must be between 0.0 and 5.0");
+                .hasMessageContaining("personalFinalScore must be between 0.00 and 10.00");
     }
 
     private ScoreInput validInput(BigDecimal personalFinalScore) {
         return new ScoreInput(
-                new BigDecimal("5.0"),
-                new BigDecimal("4.5"),
-                new BigDecimal("4.5"),
-                new BigDecimal("4.0"),
-                new BigDecimal("4.5"),
-                new BigDecimal("4.0"),
-                new BigDecimal("5.0"),
-                new BigDecimal("4.5"),
-                new BigDecimal("5.0"),
+                new BigDecimal("10.00"),
+                new BigDecimal("9.00"),
+                new BigDecimal("9.00"),
+                new BigDecimal("8.00"),
+                new BigDecimal("9.00"),
+                new BigDecimal("8.00"),
+                new BigDecimal("10.00"),
+                new BigDecimal("9.00"),
+                new BigDecimal("10.00"),
                 personalFinalScore);
     }
 }

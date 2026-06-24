@@ -10,15 +10,15 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@DecimalMin("0.0")
-@DecimalMax("5.0")
-@Digits(integer = 1, fraction = 1)
+@DecimalMin("0.00")
+@DecimalMax("10.00")
+@Digits(integer = 2, fraction = 2)
 @Constraint(validatedBy = CategoryScoreValidator.class)
 @Target({ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface CategoryScore {
 
-    String message() default "Score must be between 0 and 5 in 0.5 increments";
+    String message() default "Score must be between 0 and 10 in 0.25 increments";
 
     Class<?>[] groups() default {};
 

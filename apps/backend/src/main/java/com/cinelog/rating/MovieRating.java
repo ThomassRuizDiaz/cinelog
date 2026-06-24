@@ -34,70 +34,70 @@ public class MovieRating {
 
     @NotNull
     @CategoryScore
-    @Column(name = "story_screenplay", nullable = false, precision = 2, scale = 1)
+    @Column(name = "story_screenplay", nullable = false, precision = 4, scale = 2)
     private BigDecimal storyScreenplay;
 
     @NotNull
     @CategoryScore
-    @Column(nullable = false, precision = 2, scale = 1)
+    @Column(nullable = false, precision = 4, scale = 2)
     private BigDecimal direction;
 
     @NotNull
     @CategoryScore
-    @Column(name = "performances_characters", nullable = false, precision = 2, scale = 1)
+    @Column(name = "performances_characters", nullable = false, precision = 4, scale = 2)
     private BigDecimal performancesCharacters;
 
     @NotNull
     @CategoryScore
-    @Column(name = "pacing_editing", nullable = false, precision = 2, scale = 1)
+    @Column(name = "pacing_editing", nullable = false, precision = 4, scale = 2)
     private BigDecimal pacingEditing;
 
     @NotNull
     @CategoryScore
-    @Column(name = "visuals_art_design", nullable = false, precision = 2, scale = 1)
+    @Column(name = "visuals_art_design", nullable = false, precision = 4, scale = 2)
     private BigDecimal visualsArtDesign;
 
     @NotNull
     @CategoryScore
-    @Column(name = "music_sound", nullable = false, precision = 2, scale = 1)
+    @Column(name = "music_sound", nullable = false, precision = 4, scale = 2)
     private BigDecimal musicSound;
 
     @NotNull
     @CategoryScore
-    @Column(name = "themes_depth", nullable = false, precision = 2, scale = 1)
+    @Column(name = "themes_depth", nullable = false, precision = 4, scale = 2)
     private BigDecimal themesDepth;
 
     @NotNull
     @CategoryScore
-    @Column(name = "originality_concept", nullable = false, precision = 2, scale = 1)
+    @Column(name = "originality_concept", nullable = false, precision = 4, scale = 2)
     private BigDecimal originalityConcept;
 
     @NotNull
     @CategoryScore
-    @Column(name = "personal_impact_enjoyment", nullable = false, precision = 2, scale = 1)
+    @Column(name = "personal_impact_enjoyment", nullable = false, precision = 4, scale = 2)
     private BigDecimal personalImpactEnjoyment;
 
     @NotNull
-    @DecimalMin("0.0")
-    @DecimalMax("5.0")
-    @Digits(integer = 1, fraction = 2)
+    @DecimalMin("0.00")
+    @DecimalMax("10.00")
+    @Digits(integer = 2, fraction = 2)
     @Column(name = "technical_score", nullable = false, precision = 4, scale = 2)
     private BigDecimal technicalScore;
 
     @NotNull
-    @DecimalMin("0.0")
-    @DecimalMax("5.0")
-    @Digits(integer = 1, fraction = 2)
+    @DecimalMin("0.00")
+    @DecimalMax("10.00")
+    @Digits(integer = 2, fraction = 2)
     @Column(name = "objective_score", nullable = false, precision = 4, scale = 2)
     private BigDecimal objectiveScore;
 
     @NotNull
     @CategoryScore
-    @Column(name = "display_score", nullable = false, precision = 2, scale = 1)
+    @Column(name = "display_score", nullable = false, precision = 4, scale = 2)
     private BigDecimal displayScore;
 
     @CategoryScore
-    @Column(name = "personal_final_score", precision = 2, scale = 1)
+    @Column(name = "personal_final_score", precision = 4, scale = 2)
     private BigDecimal personalFinalScore;
 
     @Column(name = "review_summary", columnDefinition = "TEXT")
