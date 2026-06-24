@@ -36,6 +36,12 @@ export function fmt1(v: number): string {
   return (Math.round(v * 10) / 10).toFixed(1);
 }
 
+/** Format a 0–10 score preserving 0.25-precision: 7.0 → "7.0", 7.5 → "7.5", 7.25 → "7.25". */
+export function fmtScore(v: number): string {
+  const r = Math.round(v * 4) / 4;
+  return (Math.round(r * 100) % 50) === 0 ? r.toFixed(1) : r.toFixed(2);
+}
+
 export function fmtDate(iso: string): string {
   const d = new Date(iso + 'T00:00');
   return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });

@@ -17,7 +17,7 @@ export default function ScoreConstellation({ scores, size = 260, showLabels = tr
   const pts = CATEGORIES.map((c, i) => {
     const a = (-90 + i * (360 / CATEGORIES.length)) * Math.PI / 180;
     const sc = scores[c.key] ?? 0;
-    const r = inner + (sc / 5) * (outer - inner);
+    const r = inner + (sc / 10) * (outer - inner);
     return {
       x: cx + r * Math.cos(a), y: cy + r * Math.sin(a),
       a, sc, c,
@@ -42,8 +42,8 @@ export default function ScoreConstellation({ scores, size = 260, showLabels = tr
       </defs>
 
       {/* guide rings */}
-      {[1, 2, 3, 4, 5].map(rr => (
-        <circle key={rr} cx={cx} cy={cy} r={inner + (rr / 5) * (outer - inner)} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+      {[2, 4, 6, 8, 10].map(rr => (
+        <circle key={rr} cx={cx} cy={cy} r={inner + (rr / 10) * (outer - inner)} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
       ))}
 
       {/* spokes */}
@@ -64,13 +64,13 @@ export default function ScoreConstellation({ scores, size = 260, showLabels = tr
       {/* vertices */}
       {pts.map((p, i) => {
         const on = highlight === p.c.key;
-        const rad = 2 + (p.sc / 5) * 2.4 + (on ? 1.6 : 0);
+        const rad = 2 + (p.sc / 10) * 2.4 + (on ? 1.6 : 0);
         return (
           <g key={i} filter="url(#constGlow)">
             <circle
               cx={p.x} cy={p.y} r={rad}
               fill={on ? 'var(--accent-bright)' : 'var(--accent)'}
-              opacity={0.45 + (p.sc / 5) * 0.55}
+              opacity={0.45 + (p.sc / 10) * 0.55}
               style={{ transition: animate ? 'all 500ms var(--ease-out)' : 'none' }}
             />
           </g>
