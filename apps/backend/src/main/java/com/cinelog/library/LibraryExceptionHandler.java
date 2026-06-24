@@ -1,6 +1,7 @@
 package com.cinelog.library;
 
 import com.cinelog.common.api.ApiErrorResponse;
+import com.cinelog.actor.ActorController;
 import com.cinelog.movie.MovieController;
 import com.cinelog.watch.WatchEntryController;
 import com.cinelog.watchlist.WatchlistController;
@@ -19,7 +20,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@RestControllerAdvice(assignableTypes = {MovieController.class, WatchEntryController.class, WatchlistController.class})
+@RestControllerAdvice(assignableTypes = {
+        ActorController.class,
+        MovieController.class,
+        WatchEntryController.class,
+        WatchlistController.class})
 public class LibraryExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
