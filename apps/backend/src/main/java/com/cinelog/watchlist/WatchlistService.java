@@ -1,5 +1,7 @@
 package com.cinelog.watchlist;
 
+import com.cinelog.actor.CastImportService;
+import com.cinelog.external.tmdb.TmdbCastImportService;
 import com.cinelog.library.LibraryConflictException;
 import com.cinelog.library.LibraryNotFoundException;
 import com.cinelog.library.LibraryValidationException;
@@ -39,6 +41,8 @@ public class WatchlistService {
     private final MovieMapper movieMapper;
     private final WatchEntryMapper watchEntryMapper;
     private final ActiveRatingService activeRatingService;
+    private final CastImportService castImportService;
+    private final TmdbCastImportService tmdbCastImportService;
 
     public WatchlistService(
             WatchlistItemRepository watchlistItemRepository,
@@ -48,7 +52,9 @@ public class WatchlistService {
             WatchlistItemMapper watchlistItemMapper,
             MovieMapper movieMapper,
             WatchEntryMapper watchEntryMapper,
-            ActiveRatingService activeRatingService) {
+            ActiveRatingService activeRatingService,
+            CastImportService castImportService,
+            TmdbCastImportService tmdbCastImportService) {
         this.watchlistItemRepository = watchlistItemRepository;
         this.movieRepository = movieRepository;
         this.watchEntryRepository = watchEntryRepository;
@@ -57,6 +63,8 @@ public class WatchlistService {
         this.movieMapper = movieMapper;
         this.watchEntryMapper = watchEntryMapper;
         this.activeRatingService = activeRatingService;
+        this.castImportService = castImportService;
+        this.tmdbCastImportService = tmdbCastImportService;
     }
 
     @Transactional(readOnly = true)
@@ -138,6 +146,7 @@ public class WatchlistService {
             movie.setPosterUrl(item.getPosterUrl());
             movie = movieRepository.saveAndFlush(movie);
         }
+        importCast(movie);
         WatchEntry watchEntry = new WatchEntry(movie, request.watchedAt(), request.watchType(), request.watchLocation());
         watchEntry.setNotes(request.notes());
         WatchEntry savedWatchEntry = watchEntryRepository.saveAndFlush(watchEntry);
@@ -148,6 +157,12 @@ public class WatchlistService {
                 movieMapper.detail(movieRepository.findById(movie.getId()).orElseThrow(), 
                         watchEntryRepository.findByMovieIdOrderByWatchedAtDescIdDesc(movie.getId())),
                 watchEntryMapper.map(savedWatchEntry));
+    }
+
+    private void importCast(Movie movie) {
+        if (movie.getMetadataSource() == MetadataSource.TMDB && movie.getTmdbId() != null) {
+            castImportService.importCast(movie, tmdbCastImportService.topCast(movie.getTmdbId()));
+        }
     }
 
     private WatchlistItem findItem(Long id) {

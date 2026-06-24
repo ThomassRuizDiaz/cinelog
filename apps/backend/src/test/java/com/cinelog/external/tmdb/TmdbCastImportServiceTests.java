@@ -30,6 +30,7 @@ class TmdbCastImportServiceTests {
         assertThat(cast.getFirst().tmdbId()).isEqualTo(101L);
         assertThat(cast.getFirst().characterName()).isEqualTo("First Role");
         assertThat(cast.getFirst().castOrder()).isZero();
+        assertThat(cast.getFirst().profilePath()).isEqualTo("/first.jpg");
     }
 
     @Test
@@ -50,6 +51,6 @@ class TmdbCastImportServiceTests {
     }
 
     private TmdbCastMember cast(Long id, String name, String character, Integer order) {
-        return new TmdbCastMember(id, name, character, order);
+        return new TmdbCastMember(id, name, character, order, "/" + name.toLowerCase() + ".jpg");
     }
 }

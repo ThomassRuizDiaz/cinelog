@@ -2,6 +2,7 @@ export { default as Icon } from './Icon';
 export type { IconName } from './Icon';
 
 export { default as Stars } from './Stars';
+export { default as ActorAvatar } from './ActorAvatar';
 export { default as GenreChips } from './GenreChips';
 export { default as MoviePoster } from './MoviePoster';
 export { default as ScoreBadge } from './ScoreBadge';
@@ -31,7 +32,9 @@ export { default as SearchInput } from './SearchInput';
 export { default as ExternalMovieResultCard } from './ExternalMovieResultCard';
 
 export { default as HalfStepRatingControl } from './HalfStepRatingControl';
+export { default as RatingScaleControl } from './RatingScaleControl';
 export { default as RatingCategoryCard } from './RatingCategoryCard';
+export { default as RatingCompleteOverlay } from './RatingCompleteOverlay';
 
 export { default as PrimaryButton } from './PrimaryButton';
 export { default as SecondaryButton } from './SecondaryButton';

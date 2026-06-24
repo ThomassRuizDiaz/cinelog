@@ -18,8 +18,8 @@ export const MOCK_MOVIES: MockMovie[] = [
   {
     id: 'the-prestige', title: 'The Prestige', year: 2006, director: 'Christopher Nolan',
     genres: ['Drama', 'Mystery', 'Sci-Fi'], runtime: 130, poster: P.prestige, posterUrl: null, rated: true,
-    scores: { story: 5, direction: 4.5, performances: 4.5, pacing: 4.5, visuals: 4.5, music: 4, themes: 4.5, originality: 4.5, impact: 5 },
-    personal: 5.0, objective: 4.58,
+    scores: { story: 10, direction: 9, performances: 9, pacing: 9, visuals: 9, music: 8, themes: 9, originality: 9, impact: 10 },
+    personal: 10.0, objective: 9.25,
     review: 'A brilliant obsessive thriller that feels like a magic trick every time.',
     note: 'The third act still rearranges my brain. Borden / Angier — the cost of the trick.',
     watches: [
@@ -31,8 +31,8 @@ export const MOCK_MOVIES: MockMovie[] = [
   {
     id: 'blade-runner-2049', title: 'Blade Runner 2049', year: 2017, director: 'Denis Villeneuve',
     genres: ['Sci-Fi', 'Drama', 'Mystery'], runtime: 164, poster: P.br2049, posterUrl: null, rated: true,
-    scores: { story: 4, direction: 5, performances: 4, pacing: 3.5, visuals: 5, music: 5, themes: 4.5, originality: 4, impact: 4.5 },
-    personal: 4.5, objective: 4.42,
+    scores: { story: 8, direction: 10, performances: 8, pacing: 7, visuals: 10, music: 10, themes: 9, originality: 8, impact: 9 },
+    personal: 9.0, objective: 8.75,
     review: 'A vast, aching tone poem — the most beautiful film about being no one.',
     note: 'Deakins paints with fog and sodium light. The Vegas sequence is a cathedral.',
     watches: [
@@ -43,8 +43,8 @@ export const MOCK_MOVIES: MockMovie[] = [
   {
     id: 'the-batman', title: 'The Batman', year: 2022, director: 'Matt Reeves',
     genres: ['Crime', 'Mystery', 'Action'], runtime: 176, poster: P.batman, posterUrl: null, rated: true,
-    scores: { story: 4, direction: 4.5, performances: 4, pacing: 3.5, visuals: 4.5, music: 4.5, themes: 4, originality: 3.5, impact: 4 },
-    personal: 4.0, objective: 4.05,
+    scores: { story: 8, direction: 9, performances: 8, pacing: 7, visuals: 9, music: 9, themes: 8, originality: 7, impact: 8 },
+    personal: 8.0, objective: 8.0,
     review: 'Noir as a downpour — Gotham as a crime scene that never stops bleeding.',
     note: 'The Nirvana needle-drop and that red-flare freeway chase. Grime over gloss.',
     watches: [
@@ -55,8 +55,8 @@ export const MOCK_MOVIES: MockMovie[] = [
   {
     id: 'parasite', title: 'Parasite', year: 2019, director: 'Bong Joon-ho',
     genres: ['Thriller', 'Drama', 'Comedy'], runtime: 132, poster: P.parasite, posterUrl: null, rated: true,
-    scores: { story: 5, direction: 5, performances: 4.5, pacing: 4.5, visuals: 4.5, music: 4, themes: 5, originality: 4.5, impact: 4.5 },
-    personal: 4.5, objective: 4.72,
+    scores: { story: 10, direction: 10, performances: 9, pacing: 9, visuals: 9, music: 8, themes: 10, originality: 9, impact: 9 },
+    personal: 9.0, objective: 9.5,
     review: 'A staircase of a film — every step down is funnier and more devastating.',
     note: 'The flood sequence. Architecture as class. Nothing wasted.',
     watches: [
@@ -67,10 +67,10 @@ export const MOCK_MOVIES: MockMovie[] = [
   {
     id: 'interstellar', title: 'Interstellar', year: 2014, director: 'Christopher Nolan',
     genres: ['Sci-Fi', 'Adventure', 'Drama'], runtime: 169, poster: P.interstel, posterUrl: null, rated: true,
-    scores: { story: 4, direction: 4.5, performances: 4.5, pacing: 3.5, visuals: 5, music: 5, themes: 4.5, originality: 4, impact: 5 },
-    personal: 5.0, objective: 4.28,
+    scores: { story: 8, direction: 9, performances: 9, pacing: 7, visuals: 10, music: 10, themes: 9, originality: 8, impact: 10 },
+    personal: 10.0, objective: 8.5,
     review: 'Love across the event horizon. Hans Zimmer’s organ still wrecks me.',
-    note: 'Docking scene. "Do not go gentle." The bookshelf. I forgive the exposition.',
+    note: 'Docking scene. “Do not go gentle.” The bookshelf. I forgive the exposition.',
     watches: [
       { watchedAt: '2026-01-19', watchType: 'REWATCH',     watchLocation: 'CINEMA', scored: true, note: '70mm re-release. Worth every minute.' },
       { watchedAt: '2014-11-09', watchType: 'FIRST_WATCH', watchLocation: 'CINEMA', scored: true, note: '' },
@@ -79,8 +79,8 @@ export const MOCK_MOVIES: MockMovie[] = [
   {
     id: 'whiplash', title: 'Whiplash', year: 2014, director: 'Damien Chazelle',
     genres: ['Drama', 'Music'], runtime: 106, poster: P.whiplash, posterUrl: null, rated: true,
-    scores: { story: 4.5, direction: 4.5, performances: 5, pacing: 5, visuals: 4, music: 5, themes: 4, originality: 4, impact: 4.5 },
-    personal: 4.5, objective: 4.4,
+    scores: { story: 9, direction: 9, performances: 10, pacing: 10, visuals: 8, music: 10, themes: 8, originality: 8, impact: 9 },
+    personal: 9.0, objective: 8.75,
     review: 'Cut like a drum solo. The last nine minutes are the best in modern cinema.',
     note: 'Not my tempo. Editing as percussion. Simmons is a force of nature.',
     watches: [
@@ -91,8 +91,8 @@ export const MOCK_MOVIES: MockMovie[] = [
   {
     id: 'arrival', title: 'Arrival', year: 2016, director: 'Denis Villeneuve',
     genres: ['Sci-Fi', 'Drama', 'Mystery'], runtime: 116, poster: P.arrival, posterUrl: null, rated: true,
-    scores: { story: 4.5, direction: 4.5, performances: 4.5, pacing: 4, visuals: 4.5, music: 4.5, themes: 5, originality: 5, impact: 4.5 },
-    personal: 4.5, objective: 4.46,
+    scores: { story: 9, direction: 9, performances: 9, pacing: 8, visuals: 9, music: 9, themes: 10, originality: 10, impact: 9 },
+    personal: 9.0, objective: 9.0,
     review: 'A film that rewrites its own grammar of time. Grief told non-linearly.',
     note: 'If you could see your whole life, would you change anything? Quietly shattering.',
     watches: [
@@ -103,10 +103,10 @@ export const MOCK_MOVIES: MockMovie[] = [
   {
     id: 'the-social-network', title: 'The Social Network', year: 2010, director: 'David Fincher',
     genres: ['Drama', 'Biography'], runtime: 120, poster: P.social, posterUrl: null, rated: true,
-    scores: { story: 5, direction: 4.5, performances: 4.5, pacing: 5, visuals: 4, music: 4.5, themes: 4, originality: 4, impact: 4 },
-    personal: 4.0, objective: 4.33,
+    scores: { story: 10, direction: 9, performances: 9, pacing: 10, visuals: 8, music: 9, themes: 8, originality: 8, impact: 8 },
+    personal: 8.0, objective: 8.75,
     review: 'Sorkin’s dialogue at sprint speed over Reznor’s cold dread. Flawless.',
-    note: 'The deposition framing. "You’re not an asshole, Mark." The final refresh.',
+    note: 'The deposition framing. “You’re not an asshole, Mark.” The final refresh.',
     watches: [
       { watchedAt: '2025-09-14', watchType: 'REWATCH',     watchLocation: 'HOME',   scored: true, note: '' },
       { watchedAt: '2010-10-15', watchType: 'FIRST_WATCH', watchLocation: 'CINEMA', scored: true, note: '' },
@@ -115,8 +115,8 @@ export const MOCK_MOVIES: MockMovie[] = [
   {
     id: 'into-the-spider-verse', title: 'Spider-Man: Into the Spider-Verse', year: 2018, director: 'Persichetti, Ramsey & Rothman',
     genres: ['Animation', 'Action', 'Adventure'], runtime: 117, poster: P.spiderv, posterUrl: null, rated: true,
-    scores: { story: 4.5, direction: 4.5, performances: 4, pacing: 4.5, visuals: 5, music: 4.5, themes: 4, originality: 5, impact: 4.5 },
-    personal: 4.5, objective: 4.5,
+    scores: { story: 9, direction: 9, performances: 8, pacing: 9, visuals: 10, music: 9, themes: 8, originality: 10, impact: 9 },
+    personal: 9.0, objective: 9.0,
     review: 'It reinvented what animation can look like. Every frame is a poster.',
     note: 'The leap of faith. Half-tone dots and chromatic aberration as emotion.',
     watches: [
@@ -127,8 +127,8 @@ export const MOCK_MOVIES: MockMovie[] = [
   {
     id: 'dune-part-two', title: 'Dune: Part Two', year: 2024, director: 'Denis Villeneuve',
     genres: ['Sci-Fi', 'Adventure', 'Drama'], runtime: 166, poster: P.dune, posterUrl: null, rated: true,
-    scores: { story: 4, direction: 5, performances: 4.5, pacing: 4, visuals: 5, music: 5, themes: 4, originality: 3.5, impact: 4.5 },
-    personal: 4.5, objective: 4.4,
+    scores: { story: 8, direction: 10, performances: 9, pacing: 8, visuals: 10, music: 10, themes: 8, originality: 7, impact: 9 },
+    personal: 9.0, objective: 8.75,
     review: 'Operatic scale with a black sun at its heart. The arena scene is monolithic.',
     note: 'Feyd-Rautha in monochrome. Sandworm riding. Villeneuve’s desert is a deity.',
     watches: [

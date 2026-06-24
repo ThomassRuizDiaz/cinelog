@@ -1,4 +1,4 @@
-import { fmt1 } from '../lib/scoring';
+import { fmtScore } from '../lib/scoring';
 
 interface ScoreRingProps {
   value: number;
@@ -10,7 +10,7 @@ interface ScoreRingProps {
 export default function ScoreRing({ value, size = 78, stroke = 5, label }: ScoreRingProps) {
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
-  const pct = value / 5;
+  const pct = value / 10;
   return (
     <div style={{ position: 'relative', width: size, height: size }}>
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
@@ -25,7 +25,7 @@ export default function ScoreRing({ value, size = 78, stroke = 5, label }: Score
         />
       </svg>
       <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0 }}>
-        <span className="tnum display" style={{ fontSize: size * 0.3, fontWeight: 700, lineHeight: 1 }}>{fmt1(value)}</span>
+        <span className="tnum display" style={{ fontSize: size * 0.3, fontWeight: 700, lineHeight: 1 }}>{fmtScore(value)}</span>
         {label && (
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: 7.5, letterSpacing: '0.14em', color: 'var(--text-faint)', textTransform: 'uppercase', marginTop: 2 }}>
             {label}

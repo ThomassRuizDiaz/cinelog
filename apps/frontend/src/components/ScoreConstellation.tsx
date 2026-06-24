@@ -1,5 +1,5 @@
 import { CATEGORIES } from '../data/categories';
-import { fmt1 } from '../lib/scoring';
+import { fmtScore } from '../lib/scoring';
 import type { RatingScores, ScoreKey } from '../types/rating';
 
 interface ScoreConstellationProps {
@@ -17,7 +17,7 @@ export default function ScoreConstellation({ scores, size = 260, showLabels = tr
   const pts = CATEGORIES.map((c, i) => {
     const a = (-90 + i * (360 / CATEGORIES.length)) * Math.PI / 180;
     const sc = scores[c.key] ?? 0;
-    const r = inner + (sc / 5) * (outer - inner);
+    const r = inner + (sc / 10) * (outer - inner);
     return {
       x: cx + r * Math.cos(a), y: cy + r * Math.sin(a),
       a, sc, c,
@@ -28,8 +28,18 @@ export default function ScoreConstellation({ scores, size = 260, showLabels = tr
 
   const poly = pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
 
+  /* Pad the viewBox horizontally when labels show so the longest category
+   * labels (e.g. "PERFORMANCES 9.25") scale to fit instead of clipping. */
+  const padX = showLabels ? size * 0.17 : 0;
+  const padY = showLabels ? size * 0.03 : 0;
+
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ overflow: 'visible' }}>
+    <svg
+      width={size}
+      height={size}
+      viewBox={`${-padX} ${-padY} ${size + padX * 2} ${size + padY * 2}`}
+      style={{ overflow: 'visible', display: 'block' }}
+    >
       <defs>
         <radialGradient id="constFill" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.42" />
@@ -42,8 +52,8 @@ export default function ScoreConstellation({ scores, size = 260, showLabels = tr
       </defs>
 
       {/* guide rings */}
-      {[1, 2, 3, 4, 5].map(rr => (
-        <circle key={rr} cx={cx} cy={cy} r={inner + (rr / 5) * (outer - inner)} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+      {[2, 4, 6, 8, 10].map(rr => (
+        <circle key={rr} cx={cx} cy={cy} r={inner + (rr / 10) * (outer - inner)} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
       ))}
 
       {/* spokes */}
@@ -64,13 +74,13 @@ export default function ScoreConstellation({ scores, size = 260, showLabels = tr
       {/* vertices */}
       {pts.map((p, i) => {
         const on = highlight === p.c.key;
-        const rad = 2 + (p.sc / 5) * 2.4 + (on ? 1.6 : 0);
+        const rad = 2 + (p.sc / 10) * 2.4 + (on ? 1.6 : 0);
         return (
           <g key={i} filter="url(#constGlow)">
             <circle
               cx={p.x} cy={p.y} r={rad}
               fill={on ? 'var(--accent-bright)' : 'var(--accent)'}
-              opacity={0.45 + (p.sc / 5) * 0.55}
+              opacity={0.45 + (p.sc / 10) * 0.55}
               style={{ transition: animate ? 'all 500ms var(--ease-out)' : 'none' }}
             />
           </g>
@@ -89,7 +99,7 @@ export default function ScoreConstellation({ scores, size = 260, showLabels = tr
             style={{ fontFamily: 'var(--font-mono)', fontSize: size * 0.035, letterSpacing: '0.04em', textTransform: 'uppercase', fill: on ? 'var(--accent-bright)' : 'var(--text-dim)', fontWeight: on ? 600 : 400 }}
           >
             {p.c.short}
-            <tspan dx="4" style={{ fill: 'var(--text-faint)' }}>{fmt1(p.sc)}</tspan>
+            <tspan dx="4" style={{ fill: 'var(--text-faint)' }}>{fmtScore(p.sc)}</tspan>
           </text>
         );
       })}

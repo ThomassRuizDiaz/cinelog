@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { ScoreConstellation, Stars, HalfStepRatingControl, RatingCategoryCard, Icon } from '../components';
+import { useState, useRef } from 'react';
+import { ScoreConstellation, Stars, RatingScaleControl, RatingCategoryCard, RatingCompleteOverlay, Icon } from '../components';
 import type { MockMovie } from '../types/movie';
 import type { RatingScores, InitialRatingData } from '../types/rating';
 import { CATEGORIES } from '../data/categories';
-import { technical, roundHalf, fmt, fmt1 } from '../lib/scoring';
+import { technical, roundHalf, roundQuarter, fmt, fmtScore } from '../lib/scoring';
 import { saveRating, buildSaveRatingRequest } from '../api/watchEntries';
 import { ApiError } from '../api/errors';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,15 +18,20 @@ interface RatingScreenProps {
   onSave: (movie: MockMovie, scores: RatingScores, finalScore: number) => void;
 }
 
+/* Session-scoped flag: the celebratory sparkle burst plays only on the first
+ * full-rating save of a session; later saves still show the calm confirmation. */
+let celebratedThisSession = false;
+
 export default function RatingScreen({ movie, watchEntryId, initialRatingData, onClose, onSave }: RatingScreenProps) {
   const { signOut } = useAuth();
+  const isFirstCelebration = useRef(false);
   const [scores, setScores] = useState<RatingScores>({ ...movie.scores });
   const [openCat, setOpenCat] = useState<string | null>(null);
   const [catNotes, setCatNotes] = useState<Record<string, string>>(
     initialRatingData?.categoryNotes ?? {},
   );
   const [override, setOverride] = useState(() =>
-    movie.personal > 0 && Math.abs(movie.personal - roundHalf(technical(movie.scores))) > 0.01);
+    movie.personal > 0 && Math.abs(movie.personal - roundQuarter(technical(movie.scores))) > 0.01);
   const [personal, setPersonal] = useState(movie.personal);
 
   const [saving, setSaving] = useState(false);
@@ -34,11 +39,14 @@ export default function RatingScreen({ movie, watchEntryId, initialRatingData, o
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const tech = technical(scores);
-  const visible = roundHalf(tech);
+  const visible = roundQuarter(tech);
   const finalScore = override ? personal : visible;
 
-  const bump = (d: number) =>
-    setPersonal(p => Math.max(0, Math.min(5, Math.round((p + d) * 2) / 2)));
+  const finishSave = () => {
+    isFirstCelebration.current = !celebratedThisSession;
+    celebratedThisSession = true;
+    setSaved(true);
+  };
 
   const doSave = async () => {
     if (saving) return;
@@ -53,8 +61,8 @@ export default function RatingScreen({ movie, watchEntryId, initialRatingData, o
           categoryNotes: catNotes,
         }));
         setSaving(false);
-        setSaved(true);
-        setTimeout(() => onSave(movie, scores, finalScore), 1050);
+        finishSave();
+        setTimeout(() => onSave(movie, scores, finalScore), 1500);
       } catch (err) {
         setSaving(false);
         if (err instanceof ApiError && err.isUnauthorized) { void signOut(); return; }
@@ -66,8 +74,8 @@ export default function RatingScreen({ movie, watchEntryId, initialRatingData, o
       }
     } else {
       /* Mock flow — no API call */
-      setSaved(true);
-      setTimeout(() => onSave(movie, scores, finalScore), 1050);
+      finishSave();
+      setTimeout(() => onSave(movie, scores, finalScore), 1500);
     }
   };
 
@@ -85,26 +93,28 @@ export default function RatingScreen({ movie, watchEntryId, initialRatingData, o
       </div>
 
       {/* live constellation panel */}
-      <div style={{ padding: '6px 16px 0' }}>
-        <div style={{ display: 'flex', gap: 14, alignItems: 'center', padding: 14, borderRadius: 20, background: 'linear-gradient(155deg, var(--ink-800), var(--ink-850))', border: '1px solid var(--line)' }}>
-          <ScoreConstellation scores={scores} size={132} showLabels={false} highlight={openCat as Parameters<typeof ScoreConstellation>[0]['highlight']} />
-          <div style={{ flex: 1 }}>
-            <div className="eyebrow" style={{ marginBottom: 8 }}>Perfil en vivo</div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 7 }}>
-              <span className="display tnum" style={{ fontSize: 32, fontWeight: 700, color: 'var(--accent)', lineHeight: 1 }}>{fmt(tech)}</span>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-faint)', letterSpacing: '0.1em' }}>TECHNICAL</span>
+      <div style={{ padding: '8px 16px 0' }}>
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center', padding: '16px 18px', borderRadius: 22, background: 'linear-gradient(155deg, var(--ink-800), var(--ink-850))', border: '1px solid var(--line)', boxShadow: 'var(--shadow-card)' }}>
+          <ScoreConstellation scores={scores} size={150} showLabels={false} highlight={openCat as Parameters<typeof ScoreConstellation>[0]['highlight']} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="eyebrow" style={{ marginBottom: 11 }}>Perfil en vivo</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
+              <span className="display tnum" style={{ fontSize: 36, fontWeight: 800, color: 'var(--accent)', lineHeight: 0.95 }}>{fmt(tech)}</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-faint)', letterSpacing: '0.06em' }}>/10</span>
             </div>
-            <div style={{ marginTop: 9, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 8.5, color: 'var(--text-faint)', letterSpacing: '0.14em', textTransform: 'uppercase', marginTop: 5 }}>Media técnica</div>
+            <div style={{ height: 1, background: 'var(--line)', margin: '13px 0' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
               <Stars value={visible} size={14} />
-              <span className="tnum" style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 600 }}>{fmt1(visible)}</span>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 8.5, color: 'var(--text-faint)', letterSpacing: '0.08em' }}>VISIBLE</span>
+              <span className="tnum display" style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{fmtScore(visible)}</span>
             </div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 8.5, color: 'var(--text-faint)', letterSpacing: '0.14em', textTransform: 'uppercase', marginTop: 6 }}>Visible</div>
           </div>
         </div>
       </div>
 
       {/* category cards */}
-      <div style={{ padding: '18px 16px 0', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ padding: '20px 16px 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {CATEGORIES.map(c => (
           <RatingCategoryCard
             key={c.key}
@@ -134,13 +144,8 @@ export default function RatingScreen({ movie, watchEntryId, initialRatingData, o
             </button>
           </div>
           {override && (
-            <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', animation: 'fadeIn 240ms ease both' }}>
-              <HalfStepRatingControl value={personal} onChange={setPersonal} size={20} gap={6} />
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <button className="pressable cl-tap" onClick={() => bump(-0.5)} style={{ width: 34, height: 34, borderRadius: 10, border: '1px solid var(--line-strong)', background: 'var(--ink-760)', color: 'var(--text)', fontSize: 20, lineHeight: 1, display: 'grid', placeItems: 'center' }}>−</button>
-                <span className="display tnum" style={{ fontSize: 24, fontWeight: 700, color: 'var(--accent)', minWidth: 38, textAlign: 'center' }}>{fmt1(personal)}</span>
-                <button className="pressable cl-tap" onClick={() => bump(0.5)} style={{ width: 34, height: 34, borderRadius: 10, border: '1px solid var(--line-strong)', background: 'var(--ink-760)', color: 'var(--text)', fontSize: 20, lineHeight: 1, display: 'grid', placeItems: 'center' }}>+</button>
-              </div>
+            <div style={{ marginTop: 14, animation: 'fadeIn 240ms ease both' }}>
+              <RatingScaleControl value={personal} onChange={setPersonal} starSize={18} />
             </div>
           )}
         </div>
@@ -161,7 +166,7 @@ export default function RatingScreen({ movie, watchEntryId, initialRatingData, o
               {override ? 'Final · personal' : 'Final · calculado'}
             </div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 7, marginTop: 3 }}>
-              <span className="display tnum" style={{ fontSize: 26, fontWeight: 700, color: 'var(--accent)', lineHeight: 1 }}>{fmt1(finalScore)}</span>
+              <span className="display tnum" style={{ fontSize: 26, fontWeight: 700, color: 'var(--accent)', lineHeight: 1 }}>{fmtScore(finalScore)}</span>
               <Stars value={roundHalf(finalScore)} size={13} />
             </div>
           </div>
@@ -176,22 +181,8 @@ export default function RatingScreen({ movie, watchEntryId, initialRatingData, o
         </div>
       </div>
 
-      {/* save confirmation overlay */}
-      {saved && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 90, display: 'grid', placeItems: 'center', background: 'rgba(8,8,11,0.82)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', animation: 'fadeIn 240ms ease both' }}>
-          <div style={{ textAlign: 'center', animation: 'fadeUp 460ms var(--ease-spring) both' }}>
-            <div style={{ width: 92, height: 92, borderRadius: '50%', margin: '0 auto 22px', display: 'grid', placeItems: 'center', background: 'radial-gradient(circle, var(--accent-glow), transparent 70%)' }}>
-              <div style={{ width: 64, height: 64, borderRadius: '50%', display: 'grid', placeItems: 'center', background: 'linear-gradient(150deg, var(--accent), var(--accent-deep))', boxShadow: '0 0 40px -6px var(--accent)' }}>
-                <Icon name="star" size={34} color="#1a1206" />
-              </div>
-            </div>
-            <div className="display" style={{ fontSize: 24, fontWeight: 700 }}>Puntuación guardada</div>
-            <div style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 14, color: 'var(--text-dim)', marginTop: 8 }}>
-              Archivada con {fmt1(finalScore)} estrellas.
-            </div>
-          </div>
-        </div>
-      )}
+      {/* cinematic save-complete moment */}
+      {saved && <RatingCompleteOverlay finalScore={finalScore} celebrate={isFirstCelebration.current} />}
     </div>
   );
 }

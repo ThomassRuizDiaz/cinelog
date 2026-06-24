@@ -3,7 +3,10 @@ export type IconName =
   | 'back' | 'close' | 'home-loc' | 'cinema' | 'rewatch'
   | 'first' | 'play' | 'star' | 'chevron' | 'chevdown'
   | 'edit' | 'cog' | 'calendar' | 'grid2' | 'list'
-  | 'sort' | 'film' | 'dot' | 'arrow';
+  | 'sort' | 'film' | 'dot' | 'arrow' | 'actors'
+  /* rating category glyphs */
+  | 'script' | 'clapper' | 'masks' | 'scissors' | 'eye'
+  | 'note' | 'layers' | 'spark' | 'heart';
 
 interface IconProps {
   name: IconName;
@@ -44,6 +47,17 @@ export default function Icon({ name, size = 22, stroke = 2, color = 'currentColo
     case 'film':     return <svg {...p}><rect x="3.5" y="4" width="17" height="16" rx="2.2"/><path d="M8 4v16M16 4v16M3.5 8h4.5M16 8h4.5M3.5 12h17M3.5 16h4.5M16 16h4.5"/></svg>;
     case 'dot':      return <svg {...p} fill={color} stroke="none"><circle cx="12" cy="12" r="4"/></svg>;
     case 'arrow':    return <svg {...p}><path d="M5 12h14M13 6l6 6-6 6"/></svg>;
+    case 'actors':   return <svg {...p}><circle cx="9" cy="8" r="3.1"/><path d="M3.6 19c0-3 2.4-5.2 5.4-5.2S14.4 16 14.4 19"/><path d="M15.5 5.6a3 3 0 0 1 0 5.7"/><path d="M16.8 14c2.4.5 3.9 2.4 3.9 5"/></svg>;
+    /* rating category glyphs */
+    case 'script':   return <svg {...p}><path d="M6 3h8.5L19 7v14H6z"/><path d="M14.5 3v4H19"/><path d="M9 12h7M9 16h7"/></svg>;
+    case 'clapper':  return <svg {...p}><rect x="3" y="8.5" width="18" height="12" rx="1.8"/><path d="M3.4 8.5 5 4l3.8 1.3M9 5.5 12.8 4l3.8 1.3M16.8 5.5 20.6 4"/></svg>;
+    case 'masks':    return <svg {...p}><path d="M4.5 5h11v4.5a5.5 5.5 0 0 1-11 0z"/><path d="M8 8.2h.01M12 8.2h.01M8.4 11.4c1.2 1 3 1 4.2 0"/></svg>;
+    case 'scissors': return <svg {...p}><circle cx="6" cy="6" r="2.4"/><circle cx="6" cy="18" r="2.4"/><path d="M8 7.6 20 18M8 16.4 20 6"/></svg>;
+    case 'eye':      return <svg {...p}><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>;
+    case 'note':     return <svg {...p}><circle cx="7" cy="18" r="2.3"/><circle cx="17" cy="16" r="2.3"/><path d="M9.3 18V6l10-2v12"/><path d="M9.3 9 19.3 7"/></svg>;
+    case 'layers':   return <svg {...p}><path d="M12 3 21 8l-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>;
+    case 'spark':    return <svg {...p} fill={color} stroke="none"><path d="M12 2.5c.7 4.6 2.2 6.1 6.8 6.8-4.6.7-6.1 2.2-6.8 6.8-.7-4.6-2.2-6.1-6.8-6.8 4.6-.7 6.1-2.2 6.8-6.8z"/></svg>;
+    case 'heart':    return <svg {...p} fill={color} stroke="none"><path d="M12 20.3s-7-4.4-7-9.4A3.9 3.9 0 0 1 12 7.2a3.9 3.9 0 0 1 7 3.7c0 5-7 9.4-7 9.4z"/></svg>;
     default:         return null;
   }
 }

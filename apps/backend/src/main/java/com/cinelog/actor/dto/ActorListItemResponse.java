@@ -4,5 +4,7 @@ public record ActorListItemResponse(
         Long id,
         Long tmdbId,
         String name,
-        long performanceCount) {
+        long performanceCount,
+        String profilePath,
+        String profileUrl) {
 }

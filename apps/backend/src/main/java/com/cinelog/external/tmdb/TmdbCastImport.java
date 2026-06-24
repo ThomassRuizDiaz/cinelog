@@ -4,5 +4,6 @@ public record TmdbCastImport(
         Long tmdbId,
         String name,
         String characterName,
-        int castOrder) {
+        int castOrder,
+        String profilePath) {
 }

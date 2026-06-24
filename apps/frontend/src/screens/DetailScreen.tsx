@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import {
   TopBar, MoviePoster, Stars, GenreChips,
-  ScoreConstellation, WatchTimeline, ReviewBlock, Icon,
+  ScoreConstellation, WatchTimeline, ReviewBlock, ActorAvatar, Icon,
 } from '../components';
 import type { MockMovie } from '../types/movie';
 import type { InitialRatingData } from '../types/rating';
-import { technical, roundHalf, fmt, fmt1 } from '../lib/scoring';
+import { technical, roundHalf, roundQuarter, fmt, fmtScore, fmtDate } from '../lib/scoring';
 import { CATEGORIES } from '../data/categories';
 import { getMovieDetail, deleteMovie } from '../api/movies';
 import { getRating } from '../api/watchEntries';
@@ -19,11 +19,22 @@ interface DetailScreenProps {
   onRate: (movie: MockMovie, watchEntryId?: number, ratingData?: InitialRatingData) => void;
   onLogWatch: (movie: MockMovie) => void;
   onDeleted?: () => void;
+  onOpenActor?: (actorId: number) => void;
 }
 
 type DetailTab = 'profile' | 'history';
 
-export default function DetailScreen({ movie: initialMovie, onBack, onRate, onLogWatch, onDeleted }: DetailScreenProps) {
+/** Plain-Spanish phrasing for the metric a movie is ranked by (avoids backend jargon). */
+function rankDriverEs(label: string): string {
+  const map: Record<string, string> = {
+    Personal: 'su media personal',
+    Technical: 'su media técnica',
+    Objective: 'su media objetiva',
+  };
+  return map[label] ?? `“${label}”`;
+}
+
+export default function DetailScreen({ movie: initialMovie, onBack, onRate, onLogWatch, onDeleted, onOpenActor }: DetailScreenProps) {
   const { signOut } = useAuth();
   const [tab, setTab] = useState<DetailTab>('profile');
   const [movie, setMovie] = useState<MockMovie>(initialMovie);
@@ -66,7 +77,7 @@ export default function DetailScreen({ movie: initialMovie, onBack, onRate, onLo
   }, [initialMovie.id, signOut]);
 
   const tech = movie.technicalScore ?? technical(movie.scores);
-  const vis = roundHalf(tech);
+  const vis = roundQuarter(tech);
   const hasOverride = movie.personal > 0 && Math.abs(movie.personal - vis) > 0.01;
   const numericId = parseInt(movie.id);
 
@@ -124,7 +135,7 @@ export default function DetailScreen({ movie: initialMovie, onBack, onRate, onLo
       <div style={{ padding: '24px 16px 0' }}>
         <div style={{ position: 'relative', padding: '18px 16px', borderRadius: 20, background: 'linear-gradient(155deg, var(--ink-800), var(--ink-850))', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-around', gap: 8 }}>
           <div style={{ textAlign: 'center', flex: 1 }}>
-            <div className="display tnum" style={{ fontSize: 34, fontWeight: 700, color: 'var(--accent)', lineHeight: 1 }}>{fmt1(movie.personal)}</div>
+            <div className="display tnum" style={{ fontSize: 34, fontWeight: 700, color: 'var(--accent)', lineHeight: 1 }}>{fmtScore(movie.personal)}</div>
             <div style={{ marginTop: 8, display: 'flex', justifyContent: 'center' }}><Stars value={movie.personal} size={11} /></div>
             <div className="eyebrow" style={{ marginTop: 8, color: 'var(--accent-deep)' }}>Personal</div>
           </div>
@@ -143,7 +154,21 @@ export default function DetailScreen({ movie: initialMovie, onBack, onRate, onLo
         </div>
         {hasOverride && (
           <div style={{ marginTop: 9, fontFamily: 'var(--font-mono)', fontSize: 9.5, color: 'var(--text-faint)', textAlign: 'center', letterSpacing: '0.04em' }}>
-            ✶ Personal score overrides the calculated {fmt1(vis)} — heart over math.
+            ✶ Personal score overrides the calculated {fmtScore(vis)} — heart over math.
+          </div>
+        )}
+
+        {/* ranking summary — surfaces movie.rankingSummary in plain Spanish */}
+        {movie.rankingSummary && (
+          <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 11, background: 'var(--ink-820)', border: '1px solid var(--line)', fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-dim)', letterSpacing: '0.02em' }}>
+              <Icon name="rankings" size={12} color="var(--accent)" /> En rankings se ordena por {rankDriverEs(movie.rankingSummary.scoreLabel)}
+            </span>
+            {movie.rankingSummary.latestWatchedAt && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 11, background: 'var(--ink-820)', border: '1px solid var(--line)', fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-faint)', letterSpacing: '0.02em' }}>
+              <Icon name="calendar" size={12} color="var(--text-faint)" /> Último visionado · {fmtDate(movie.rankingSummary.latestWatchedAt)}
+            </span>
+            )}
           </div>
         )}
       </div>
@@ -152,6 +177,31 @@ export default function DetailScreen({ movie: initialMovie, onBack, onRate, onLo
       <div style={{ padding: '18px 20px 0' }}>
         <ReviewBlock text={movie.review} />
       </div>
+
+      {/* cast — compact, tappable → actor detail. Hidden entirely when empty. */}
+      {movie.cast && movie.cast.length > 0 && (
+        <div style={{ padding: '22px 0 0' }}>
+          <div className="eyebrow" style={{ padding: '0 20px', marginBottom: 12 }}>Reparto</div>
+          <div style={{ display: 'flex', gap: 10, overflowX: 'auto', padding: '0 16px 4px', scrollbarWidth: 'none' }}>
+            {[...movie.cast].sort((a, b) => a.castOrder - b.castOrder).map(member => (
+              <button
+                key={`${member.actorId}-${member.castOrder}`}
+                className="pressable cl-tap"
+                onClick={() => onOpenActor?.(member.actorId)}
+                style={{ flexShrink: 0, width: 96, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '13px 8px', borderRadius: 15, border: '1px solid var(--line)', background: 'var(--ink-820)', color: 'var(--text)', textAlign: 'center', cursor: 'pointer' }}
+              >
+                <ActorAvatar name={member.name} profileUrl={member.profileUrl} size={54} />
+                <span style={{ minWidth: 0, width: '100%' }}>
+                  <span className="display" style={{ display: 'block', fontSize: 12.5, fontWeight: 600, lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.name}</span>
+                  {member.characterName && (
+                    <span style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: 8.5, color: 'var(--text-faint)', marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.characterName}</span>
+                  )}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* quick actions */}
       <div style={{ padding: '20px 16px 0', display: 'flex', gap: 10 }}>
@@ -189,12 +239,15 @@ export default function DetailScreen({ movie: initialMovie, onBack, onRate, onLo
           <div style={{ padding: '20px 16px 0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9 }}>
             {CATEGORIES.map(c => (
               <div key={c.key} style={{ padding: '11px 12px', borderRadius: 13, background: 'var(--ink-820)', border: '1px solid var(--line)' }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: 12, fontWeight: 600 }}>{c.short}</span>
-                  <span className="tnum" style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700, color: 'var(--accent)' }}>{fmt1(movie.scores[c.key])}</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                    <Icon name={c.icon} size={13} color={c.color} stroke={1.8} />
+                    <span style={{ fontSize: 12, fontWeight: 600 }}>{c.short}</span>
+                  </span>
+                  <span className="tnum" style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700, color: 'var(--accent)' }}>{fmtScore(movie.scores[c.key])}</span>
                 </div>
                 <div style={{ marginTop: 8, height: 4, borderRadius: 3, background: 'var(--ink-680)', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${(movie.scores[c.key] / 5) * 100}%`, borderRadius: 3, background: 'linear-gradient(90deg, var(--accent-deep), var(--accent))' }} />
+                  <div style={{ height: '100%', width: `${(movie.scores[c.key] / 10) * 100}%`, borderRadius: 3, background: 'linear-gradient(90deg, var(--accent-deep), var(--accent))' }} />
                 </div>
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: 8, color: 'var(--text-faint)', marginTop: 6, letterSpacing: '0.06em' }}>PESO {c.weight}%</div>
               </div>

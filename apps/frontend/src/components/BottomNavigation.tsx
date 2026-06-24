@@ -1,16 +1,17 @@
 import Icon from './Icon';
 
-export type TabId = 'home' | 'library' | 'watchlist' | 'rankings' | 'add';
+export type TabId = 'home' | 'library' | 'actors' | 'watchlist' | 'rankings' | 'add';
 
 interface NavItem {
   id: TabId;
-  icon: 'home' | 'library' | 'watchlist' | 'rankings' | 'add';
+  icon: 'home' | 'library' | 'actors' | 'watchlist' | 'rankings' | 'add';
   label: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
   { id: 'home',      icon: 'home',      label: 'Home' },
   { id: 'library',   icon: 'library',   label: 'Library' },
+  { id: 'actors',    icon: 'actors',    label: 'Actores' },
   { id: 'watchlist', icon: 'watchlist', label: 'Watchlist' },
   { id: 'rankings',  icon: 'rankings',  label: 'Rankings' },
   { id: 'add',       icon: 'add',       label: 'Add' },

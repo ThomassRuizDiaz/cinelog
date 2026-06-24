@@ -11,3 +11,4 @@ export * from './client';
 export * from './auth';
 export * from './movies';
 export * from './watchEntries';
+export * from './actors';

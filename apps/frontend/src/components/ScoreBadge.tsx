@@ -1,5 +1,5 @@
 import Icon from './Icon';
-import { fmt1 } from '../lib/scoring';
+import { fmtScore } from '../lib/scoring';
 
 export type ScoreBadgeVariant = 'primary' | 'ghost' | 'line';
 export type ScoreBadgeSize = 'md' | 'lg';
@@ -34,7 +34,7 @@ export default function ScoreBadge({ value, label, variant = 'ghost', size = 'md
     >
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
         <span className="tnum" style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: big ? 27 : 19, lineHeight: 1 }}>
-          {fmt1(value)}
+          {fmtScore(value)}
         </span>
         <Icon name="star" size={big ? 13 : 10} color={variant === 'primary' ? '#2a1d08' : 'var(--star)'} />
       </div>
