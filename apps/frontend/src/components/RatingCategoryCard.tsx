@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import HalfStepRatingControl from './HalfStepRatingControl';
+import RatingScaleControl from './RatingScaleControl';
 import Icon from './Icon';
-import { fmt1 } from '../lib/scoring';
+import { fmtScore } from '../lib/scoring';
 import type { RatingCategory } from '../types/rating';
 
 interface RatingCategoryCardProps {
@@ -48,12 +48,12 @@ export default function RatingCategoryCard({
             <div style={{ fontSize: 11.5, color: 'var(--text-faint)', marginTop: 3 }}>{c.desc}</div>
           </div>
           <span className="display tnum" style={{ fontSize: 22, fontWeight: 700, color: value > 0 ? 'var(--accent)' : 'var(--text-ghost)', lineHeight: 1 }}>
-            {fmt1(value)}
+            {value > 0 ? fmtScore(value) : '—'}
           </span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 13 }}>
-          <HalfStepRatingControl value={value} onChange={onChange} size={30} />
+          <RatingScaleControl value={value} onChange={onChange} />
           <button
             className="cl-tap"
             onClick={onToggleNote}

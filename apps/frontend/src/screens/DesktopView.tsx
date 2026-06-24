@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   MoviePoster, ScoreBadge, Stars, GenreChips, ScoreConstellation,
-  WatchTimeline, WatchMeta, MovieCard, HalfStepRatingControl, Icon,
+  WatchTimeline, WatchMeta, MovieCard, RatingScaleControl, Icon,
 } from '../components';
 import type { MockMovie, ExternalMovieResult, PosterPalette } from '../types/movie';
 import type { RatingScores } from '../types/rating';
@@ -9,7 +9,7 @@ import type { WatchType, WatchLocation } from '../types/watch';
 import type { WatchlistItem } from '../types/watchlist';
 import { RANKING_MODES } from '../data/rankings';
 import { CATEGORIES } from '../data/categories';
-import { technical, roundHalf, fmt, fmt1, fmtDate } from '../lib/scoring';
+import { technical, roundHalf, fmt, fmt1, fmtScore, fmtDate } from '../lib/scoring';
 import {
   getDashboard, getMovies, getRankings, getMovieDetail,
   RANKING_MODE_MAP, deleteMovie, searchExternalMovies,
@@ -62,7 +62,6 @@ function DeskRating({ movie, watchEntryId, onClose, onSave }: {
   const [saveError, setSaveError] = useState<string | null>(null);
   const tech = technical(scores), vis = roundHalf(tech);
   const finalScore = override ? personal : vis;
-  const bump = (d: number) => setPersonal(p => Math.max(0, Math.min(5, Math.round((p + d) * 2) / 2)));
 
   const doSave = async () => {
     if (saving) return;
@@ -109,9 +108,8 @@ function DeskRating({ movie, watchEntryId, onClose, onSave }: {
                   </div>
                   <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 2 }}>{c.desc}</div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-                  <HalfStepRatingControl value={scores[c.key]} onChange={v => setScores(s => ({ ...s, [c.key]: v }))} size={22} gap={5} />
-                  <span className="display tnum" style={{ fontSize: 17, fontWeight: 700, color: scores[c.key] > 0 ? 'var(--accent)' : 'var(--text-ghost)', width: 30, textAlign: 'right' }}>{fmt1(scores[c.key])}</span>
+                <div style={{ flexShrink: 0 }}>
+                  <RatingScaleControl value={scores[c.key]} onChange={v => setScores(s => ({ ...s, [c.key]: v }))} starSize={14} starGap={2} />
                 </div>
               </div>
             ))}
@@ -122,11 +120,9 @@ function DeskRating({ movie, watchEntryId, onClose, onSave }: {
               <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 2 }}>Anular el cálculo</div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              {override && (<>
-                <button className="pressable cl-tap" onClick={() => bump(-0.5)} style={{ width: 30, height: 30, borderRadius: 9, border: '1px solid var(--line-strong)', background: 'var(--ink-760)', color: 'var(--text)', fontSize: 18, display: 'grid', placeItems: 'center' }}>−</button>
-                <span className="display tnum" style={{ fontSize: 20, fontWeight: 700, color: 'var(--accent)', width: 34, textAlign: 'center' }}>{fmt1(personal)}</span>
-                <button className="pressable cl-tap" onClick={() => bump(0.5)} style={{ width: 30, height: 30, borderRadius: 9, border: '1px solid var(--line-strong)', background: 'var(--ink-760)', color: 'var(--text)', fontSize: 18, display: 'grid', placeItems: 'center' }}>+</button>
-              </>)}
+              {override && (
+                <RatingScaleControl value={personal} onChange={setPersonal} starSize={14} />
+              )}
               <button className="cl-tap" onClick={() => setOverride(o => !o)} style={{ border: 'none', background: 'none', padding: 0 }}>
                 <span style={{ width: 44, height: 26, borderRadius: 20, background: override ? 'var(--accent)' : 'var(--ink-680)', display: 'block', position: 'relative' }}>
                   <span style={{ position: 'absolute', top: 3, left: override ? 21 : 3, width: 20, height: 20, borderRadius: '50%', background: '#fff', transition: 'left var(--dur) var(--ease-spring)', boxShadow: '0 2px 5px rgba(0,0,0,0.4)' }} />
@@ -138,7 +134,7 @@ function DeskRating({ movie, watchEntryId, onClose, onSave }: {
           <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
             <button className="pressable cl-tap" onClick={onClose} style={{ flex: '0 0 auto', padding: '13px 20px', borderRadius: 13, border: '1px solid var(--line-strong)', background: 'var(--ink-800)', color: 'var(--text-dim)', fontSize: 14, fontWeight: 500 }}>Cancelar</button>
             <button className="pressable cl-tap" onClick={() => void doSave()} disabled={saving} style={{ flex: 1, padding: '13px', borderRadius: 13, border: 'none', background: saving ? 'var(--ink-720)' : 'linear-gradient(150deg, var(--accent), var(--accent-deep))', color: saving ? 'var(--text-faint)' : '#1a1206', fontSize: 15, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer' }}>
-              {saving ? 'Guardando…' : `Guardar · ${fmt1(finalScore)}★`}
+              {saving ? 'Guardando…' : `Guardar · ${fmtScore(finalScore)}★`}
             </button>
           </div>
         </div>
@@ -257,10 +253,10 @@ function DeskDetail({ movie: initialMovie, onClose, onRate, onDeleted, onLogWatc
               <div key={c.key} style={{ padding: '10px 12px', borderRadius: 12, background: 'var(--ink-820)', border: '1px solid var(--line)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                   <span style={{ fontSize: 12, fontWeight: 600 }}>{c.short}</span>
-                  <span className="display tnum" style={{ fontSize: 14, fontWeight: 700, color: 'var(--accent)' }}>{fmt1(movie.scores[c.key])}</span>
+                  <span className="display tnum" style={{ fontSize: 14, fontWeight: 700, color: 'var(--accent)' }}>{fmtScore(movie.scores[c.key])}</span>
                 </div>
                 <div style={{ marginTop: 7, height: 3.5, borderRadius: 3, background: 'var(--ink-680)', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${(movie.scores[c.key] / 5) * 100}%`, background: 'linear-gradient(90deg, var(--accent-deep), var(--accent))' }} />
+                  <div style={{ height: '100%', width: `${(movie.scores[c.key] / 10) * 100}%`, background: 'linear-gradient(90deg, var(--accent-deep), var(--accent))' }} />
                 </div>
               </div>
             ))}
@@ -826,7 +822,7 @@ export default function DesktopView() {
                               <div className="display" style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.title}</div>
                               <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-faint)', marginTop: 2 }}>{m.year}</div>
                             </div>
-                            <span className="display tnum" style={{ fontSize: 15, fontWeight: 700, color: 'var(--accent)' }}>{fmt1(m.personal)}</span>
+                            <span className="display tnum" style={{ fontSize: 15, fontWeight: 700, color: 'var(--accent)' }}>{fmtScore(m.personal)}</span>
                           </button>
                         ))}
                       </div>
@@ -867,7 +863,7 @@ export default function DesktopView() {
                       <div style={{ marginTop: 9 }}>
                         <div className="display" style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.title}</div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4 }}>
-                          {m.rated && <><Icon name="star" size={11} color="var(--star)" /><span className="display tnum" style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--accent)' }}>{fmt1(sort === 'technical' ? (m.technicalScore ?? 0) : sort === 'objective' ? m.objective : m.personal)}</span></>}
+                          {m.rated && <><Icon name="star" size={11} color="var(--star)" /><span className="display tnum" style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--accent)' }}>{sort === 'personal' ? fmtScore(m.personal) : fmt1(sort === 'technical' ? (m.technicalScore ?? 0) : m.objective)}</span></>}
                           {!m.rated && <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-ghost)' }}>Sin puntuar</span>}
                         </div>
                       </div>

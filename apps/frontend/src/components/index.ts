@@ -31,6 +31,7 @@ export { default as SearchInput } from './SearchInput';
 export { default as ExternalMovieResultCard } from './ExternalMovieResultCard';
 
 export { default as HalfStepRatingControl } from './HalfStepRatingControl';
+export { default as RatingScaleControl } from './RatingScaleControl';
 export { default as RatingCategoryCard } from './RatingCategoryCard';
 
 export { default as PrimaryButton } from './PrimaryButton';

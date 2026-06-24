@@ -22,7 +22,7 @@ export default function Stars({ value, size = 15, gap = 2.5, color = 'var(--star
   );
   return (
     <span style={{ display: 'inline-flex', gap, alignItems: 'center' }}>
-      {[0, 1, 2, 3, 4].map(i => star(Math.max(0, Math.min(1, value - i)), i))}
+      {[0, 1, 2, 3, 4].map(i => star(Math.max(0, Math.min(1, value / 2 - i)), i))}
     </span>
   );
 }

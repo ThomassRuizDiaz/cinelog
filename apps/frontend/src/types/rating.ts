@@ -10,7 +10,7 @@ export type ScoreKey =
   | 'originality'
   | 'impact';
 
-/* All 9 category scores (0–5 in 0.5 increments) */
+/* All 9 category scores (0–10 in 0.25 increments) */
 export type RatingScores = Record<ScoreKey, number>;
 
 /* Category definition from CL_CATEGORIES */

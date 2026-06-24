@@ -5,7 +5,7 @@ import {
 } from '../components';
 import type { MockMovie } from '../types/movie';
 import type { InitialRatingData } from '../types/rating';
-import { technical, roundHalf, fmt, fmt1 } from '../lib/scoring';
+import { technical, roundHalf, fmt, fmt1, fmtScore } from '../lib/scoring';
 import { CATEGORIES } from '../data/categories';
 import { getMovieDetail, deleteMovie } from '../api/movies';
 import { getRating } from '../api/watchEntries';
@@ -124,7 +124,7 @@ export default function DetailScreen({ movie: initialMovie, onBack, onRate, onLo
       <div style={{ padding: '24px 16px 0' }}>
         <div style={{ position: 'relative', padding: '18px 16px', borderRadius: 20, background: 'linear-gradient(155deg, var(--ink-800), var(--ink-850))', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-around', gap: 8 }}>
           <div style={{ textAlign: 'center', flex: 1 }}>
-            <div className="display tnum" style={{ fontSize: 34, fontWeight: 700, color: 'var(--accent)', lineHeight: 1 }}>{fmt1(movie.personal)}</div>
+            <div className="display tnum" style={{ fontSize: 34, fontWeight: 700, color: 'var(--accent)', lineHeight: 1 }}>{fmtScore(movie.personal)}</div>
             <div style={{ marginTop: 8, display: 'flex', justifyContent: 'center' }}><Stars value={movie.personal} size={11} /></div>
             <div className="eyebrow" style={{ marginTop: 8, color: 'var(--accent-deep)' }}>Personal</div>
           </div>
@@ -191,10 +191,10 @@ export default function DetailScreen({ movie: initialMovie, onBack, onRate, onLo
               <div key={c.key} style={{ padding: '11px 12px', borderRadius: 13, background: 'var(--ink-820)', border: '1px solid var(--line)' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: 12, fontWeight: 600 }}>{c.short}</span>
-                  <span className="tnum" style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700, color: 'var(--accent)' }}>{fmt1(movie.scores[c.key])}</span>
+                  <span className="tnum" style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700, color: 'var(--accent)' }}>{fmtScore(movie.scores[c.key])}</span>
                 </div>
                 <div style={{ marginTop: 8, height: 4, borderRadius: 3, background: 'var(--ink-680)', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${(movie.scores[c.key] / 5) * 100}%`, borderRadius: 3, background: 'linear-gradient(90deg, var(--accent-deep), var(--accent))' }} />
+                  <div style={{ height: '100%', width: `${(movie.scores[c.key] / 10) * 100}%`, borderRadius: 3, background: 'linear-gradient(90deg, var(--accent-deep), var(--accent))' }} />
                 </div>
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: 8, color: 'var(--text-faint)', marginTop: 6, letterSpacing: '0.06em' }}>PESO {c.weight}%</div>
               </div>

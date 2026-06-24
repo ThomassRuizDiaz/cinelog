@@ -19,7 +19,7 @@ import { getAuthStatus, logout } from './api/auth';
 import type { AuthStatus } from './api/auth';
 import type { MockMovie } from './types/movie';
 import type { RatingScores, InitialRatingData } from './types/rating';
-import { fmt1 } from './lib/scoring';
+import { fmtScore } from './lib/scoring';
 
 type AuthState = 'checking' | 'unauthenticated' | 'authenticated';
 
@@ -125,7 +125,7 @@ export default function App() {
       /* New movie just rated — navigate to Library so user can see it */
       handleTabChange('library');
     }
-    setTimeout(() => showToast(`${_movie.title} puntuada con ${fmt1(finalScore)}★`), 420);
+    setTimeout(() => showToast(`${_movie.title} puntuada con ${fmtScore(finalScore)}★`), 420);
   }, [ratingSource, handleTabChange, showToast]);
 
   const handleSaved = useCallback((title: string) => {

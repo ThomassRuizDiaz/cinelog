@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { ScoreConstellation, Stars, HalfStepRatingControl, RatingCategoryCard, Icon } from '../components';
+import { ScoreConstellation, Stars, RatingScaleControl, RatingCategoryCard, Icon } from '../components';
 import type { MockMovie } from '../types/movie';
 import type { RatingScores, InitialRatingData } from '../types/rating';
 import { CATEGORIES } from '../data/categories';
-import { technical, roundHalf, fmt, fmt1 } from '../lib/scoring';
+import { technical, roundHalf, fmt, fmt1, fmtScore } from '../lib/scoring';
 import { saveRating, buildSaveRatingRequest } from '../api/watchEntries';
 import { ApiError } from '../api/errors';
 import { useAuth } from '../contexts/AuthContext';
@@ -36,9 +36,6 @@ export default function RatingScreen({ movie, watchEntryId, initialRatingData, o
   const tech = technical(scores);
   const visible = roundHalf(tech);
   const finalScore = override ? personal : visible;
-
-  const bump = (d: number) =>
-    setPersonal(p => Math.max(0, Math.min(5, Math.round((p + d) * 2) / 2)));
 
   const doSave = async () => {
     if (saving) return;
@@ -134,13 +131,8 @@ export default function RatingScreen({ movie, watchEntryId, initialRatingData, o
             </button>
           </div>
           {override && (
-            <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', animation: 'fadeIn 240ms ease both' }}>
-              <HalfStepRatingControl value={personal} onChange={setPersonal} size={20} gap={6} />
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <button className="pressable cl-tap" onClick={() => bump(-0.5)} style={{ width: 34, height: 34, borderRadius: 10, border: '1px solid var(--line-strong)', background: 'var(--ink-760)', color: 'var(--text)', fontSize: 20, lineHeight: 1, display: 'grid', placeItems: 'center' }}>−</button>
-                <span className="display tnum" style={{ fontSize: 24, fontWeight: 700, color: 'var(--accent)', minWidth: 38, textAlign: 'center' }}>{fmt1(personal)}</span>
-                <button className="pressable cl-tap" onClick={() => bump(0.5)} style={{ width: 34, height: 34, borderRadius: 10, border: '1px solid var(--line-strong)', background: 'var(--ink-760)', color: 'var(--text)', fontSize: 20, lineHeight: 1, display: 'grid', placeItems: 'center' }}>+</button>
-              </div>
+            <div style={{ marginTop: 14, animation: 'fadeIn 240ms ease both' }}>
+              <RatingScaleControl value={personal} onChange={setPersonal} starSize={18} />
             </div>
           )}
         </div>
@@ -161,7 +153,7 @@ export default function RatingScreen({ movie, watchEntryId, initialRatingData, o
               {override ? 'Final · personal' : 'Final · calculado'}
             </div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 7, marginTop: 3 }}>
-              <span className="display tnum" style={{ fontSize: 26, fontWeight: 700, color: 'var(--accent)', lineHeight: 1 }}>{fmt1(finalScore)}</span>
+              <span className="display tnum" style={{ fontSize: 26, fontWeight: 700, color: 'var(--accent)', lineHeight: 1 }}>{fmtScore(finalScore)}</span>
               <Stars value={roundHalf(finalScore)} size={13} />
             </div>
           </div>
@@ -187,7 +179,7 @@ export default function RatingScreen({ movie, watchEntryId, initialRatingData, o
             </div>
             <div className="display" style={{ fontSize: 24, fontWeight: 700 }}>Puntuación guardada</div>
             <div style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 14, color: 'var(--text-dim)', marginTop: 8 }}>
-              Archivada con {fmt1(finalScore)} estrellas.
+              Archivada con {fmtScore(finalScore)} estrellas.
             </div>
           </div>
         </div>

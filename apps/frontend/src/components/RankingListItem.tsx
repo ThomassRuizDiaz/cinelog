@@ -1,6 +1,6 @@
 import MoviePoster from './MoviePoster';
 import Stars from './Stars';
-import { fmt, fmt1, roundHalf } from '../lib/scoring';
+import { fmt, fmtScore, roundHalf } from '../lib/scoring';
 import type { MockMovie } from '../types/movie';
 
 interface SecondaryScore {
@@ -60,7 +60,7 @@ export default function RankingListItem({ movie, rank, score, secondaryScores, o
           <div style={{ display: 'flex', gap: 12, marginTop: 7 }}>
             {secondaryScores.map((s, i) => (
               <span key={i} style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-dim)', letterSpacing: '0.04em' }}>
-                {s.label} <span className="tnum" style={{ color: 'var(--text)', fontWeight: 600 }}>{fmt1(s.value)}</span>
+                {s.label} <span className="tnum" style={{ color: 'var(--text)', fontWeight: 600 }}>{fmtScore(s.value)}</span>
               </span>
             ))}
           </div>
