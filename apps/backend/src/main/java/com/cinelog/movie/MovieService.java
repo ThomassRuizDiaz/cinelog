@@ -1,5 +1,7 @@
 package com.cinelog.movie;
 
+import com.cinelog.actor.CastImportService;
+import com.cinelog.external.tmdb.TmdbCastImportService;
 import com.cinelog.library.LibraryConflictException;
 import com.cinelog.library.LibraryNotFoundException;
 import com.cinelog.library.LibraryValidationException;
@@ -35,6 +37,8 @@ public class MovieService {
     private final MovieRatingSummaryMapper ratingSummaryMapper;
     private final MovieMapper movieMapper;
     private final MovieRatingRepository movieRatingRepository;
+    private final CastImportService castImportService;
+    private final TmdbCastImportService tmdbCastImportService;
 
     public MovieService(
             MovieRepository movieRepository,
@@ -42,13 +46,17 @@ public class MovieService {
             MovieMetadataReader metadataReader,
             MovieRatingSummaryMapper ratingSummaryMapper,
             MovieMapper movieMapper,
-            MovieRatingRepository movieRatingRepository) {
+            MovieRatingRepository movieRatingRepository,
+            CastImportService castImportService,
+            TmdbCastImportService tmdbCastImportService) {
         this.movieRepository = movieRepository;
         this.watchEntryRepository = watchEntryRepository;
         this.metadataReader = metadataReader;
         this.ratingSummaryMapper = ratingSummaryMapper;
         this.movieMapper = movieMapper;
         this.movieRatingRepository = movieRatingRepository;
+        this.castImportService = castImportService;
+        this.tmdbCastImportService = tmdbCastImportService;
     }
 
     @Transactional(readOnly = true)
@@ -131,7 +139,9 @@ public class MovieService {
         movie.setTmdbId(tmdbId);
         copyMetadata(movie, request.originalTitle(), request.releaseYear(), request.directors(),
                 request.posterPath(), request.posterUrl(), request.genres());
-        return movieMapper.detail(movieRepository.saveAndFlush(movie), List.of());
+        Movie saved = movieRepository.saveAndFlush(movie);
+        castImportService.importCast(saved, tmdbCastImportService.topCast(tmdbId));
+        return movieMapper.detail(saved, List.of());
     }
 
     @Transactional

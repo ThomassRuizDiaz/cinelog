@@ -33,6 +33,7 @@ export default function LibraryScreen({ onOpenMovie }: LibraryScreenProps) {
   const [retryKey, setRetryKey] = useState(0);
 
   const [q, setQ] = useState('');
+  const [genre, setGenre] = useState('');
   const [sort, setSort] = useState<SortId>('personal');
   const [grid, setGrid] = useState(false);
 
@@ -57,14 +58,23 @@ export default function LibraryScreen({ onOpenMovie }: LibraryScreenProps) {
 
   const retry = useCallback(() => setRetryKey(k => k + 1), []);
 
+  const genreOptions = useMemo(() => {
+    const set = new Set<string>();
+    movies.forEach(m => m.genres.forEach(g => set.add(g)));
+    return ['', ...Array.from(set).sort()];
+  }, [movies]);
+
   const sortOptions = useMemo(() => [
     ...BASE_SORTS,
     ...CATEGORIES.map(c => ({ id: c.key, label: c.short })),
   ], []);
 
   const list = useMemo(() => {
-    const arr = movies.filter(m =>
-      !q || m.title.toLowerCase().includes(q.toLowerCase()) || m.director.toLowerCase().includes(q.toLowerCase()));
+    const arr = movies.filter(m => {
+      const matchQ = !q || m.title.toLowerCase().includes(q.toLowerCase()) || m.director.toLowerCase().includes(q.toLowerCase());
+      const matchGenre = !genre || m.genres.includes(genre);
+      return matchQ && matchGenre;
+    });
     const val = (m: MockMovie): string | number => {
       if (sort === 'personal')  return m.personal;
       if (sort === 'technical') return m.technicalScore ?? technical(m.scores);
@@ -80,7 +90,7 @@ export default function LibraryScreen({ onOpenMovie }: LibraryScreenProps) {
       if (sort === 'latest') return String(vb).localeCompare(String(va));
       return Number(vb) - Number(va);
     });
-  }, [movies, q, sort]);
+  }, [movies, q, genre, sort]);
 
   const scoreOf = (m: MockMovie): number => {
     if (sort === 'technical') return m.technicalScore ?? technical(m.scores);
@@ -155,6 +165,28 @@ export default function LibraryScreen({ onOpenMovie }: LibraryScreenProps) {
         </div>
       </div>
 
+      {genreOptions.length > 1 && (
+        <div style={{ display: 'flex', gap: 7, overflowX: 'auto', padding: '0 16px 12px', scrollbarWidth: 'none' }}>
+          {genreOptions.map(g => (
+            <button
+              key={g || '__all__'}
+              className="cl-tap"
+              onClick={() => setGenre(g)}
+              style={{
+                flexShrink: 0, border: genre === g ? '1px solid var(--accent)' : '1px solid var(--line-strong)',
+                borderRadius: 20, padding: '5px 13px',
+                background: genre === g ? 'rgba(232,185,116,0.14)' : 'var(--ink-820)',
+                color: genre === g ? 'var(--accent)' : 'var(--text-dim)',
+                fontFamily: 'var(--font-mono)', fontSize: 10.5, letterSpacing: '0.06em',
+                textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap',
+              }}
+            >
+              {g || 'Todos los géneros'}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
         <span style={{ paddingLeft: 16, display: 'inline-flex' }}><Icon name="sort" size={15} color="var(--text-faint)" /></span>
         <RankingTabs options={sortOptions} value={sort} onChange={id => setSort(id as SortId)} />
@@ -191,7 +223,12 @@ export default function LibraryScreen({ onOpenMovie }: LibraryScreenProps) {
         <div style={{ textAlign: 'center', padding: '60px 32px 0' }}>
           <div className="display" style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-dim)' }}>Sin resultados</div>
           <div style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 13, color: 'var(--text-faint)', marginTop: 8 }}>
-            Prueba otro término o limpia el filtro.
+            {q && genre
+              ? `No hay resultados para "${q}" en ${genre}.`
+              : q
+              ? `No hay resultados para "${q}".`
+              : `No hay películas en el género ${genre}.`}
+            {' '}Prueba otro filtro.
           </div>
           <Stars value={0} size={14} />
         </div>

@@ -40,11 +40,10 @@ export default function MovieCard({ movie, onOpen, score, scoreLabel, delay = 0 
       />
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', paddingTop: 1 }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 7 }}>
-            <span className="display" style={{ fontSize: 16.5, fontWeight: 600, lineHeight: 1.08, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {movie.title}
+          <div style={{ display: 'flex' }}>
+            <span className="display" style={{ fontSize: 16.5, fontWeight: 600, lineHeight: 1.08, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0 }}>
+              {movie.title}{movie.year ? ` (${movie.year})` : ''}
             </span>
-            <span className="tnum" style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-faint)', flexShrink: 0 }}>{movie.year}</span>
           </div>
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.04em', color: 'var(--text-dim)', marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {movie.director} · {movie.genres.slice(0, 2).join(', ')}

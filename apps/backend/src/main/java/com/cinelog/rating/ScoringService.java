@@ -12,9 +12,8 @@ import org.springframework.stereotype.Service;
 public class ScoringService {
 
     private static final BigDecimal ZERO = BigDecimal.ZERO;
-    private static final BigDecimal FIVE = new BigDecimal("5.0");
-    private static final BigDecimal HALF_POINT = new BigDecimal("0.5");
-    private static final BigDecimal TWO = new BigDecimal("2");
+    private static final BigDecimal TEN = new BigDecimal("10.00");
+    private static final BigDecimal QUARTER_POINT = new BigDecimal("0.25");
     private static final BigDecimal OBJECTIVE_WEIGHT = new BigDecimal("0.88");
     private static final TypeReference<Map<String, BigDecimal>> WEIGHTS_TYPE = new TypeReference<>() {
     };
@@ -37,9 +36,9 @@ public class ScoringService {
         BigDecimal objectiveScore = weightedSum(objectiveCategories, weights)
                 .divide(OBJECTIVE_WEIGHT, 2, RoundingMode.HALF_UP);
 
-        BigDecimal displayScore = technicalScore.multiply(TWO)
-                .setScale(0, RoundingMode.HALF_UP)
-                .divide(TWO, 1, RoundingMode.UNNECESSARY);
+        BigDecimal displayScore = technicalScore.divide(QUARTER_POINT, 0, RoundingMode.HALF_UP)
+                .multiply(QUARTER_POINT)
+                .setScale(2, RoundingMode.UNNECESSARY);
 
         BigDecimal personalRankingScore = personalRankingScore(
                 input.personalFinalScore(), displayScore, technicalScore);
@@ -72,11 +71,11 @@ public class ScoringService {
             }
             throw new IllegalArgumentException(name + " is required");
         }
-        if (score.compareTo(ZERO) < 0 || score.compareTo(FIVE) > 0) {
-            throw new IllegalArgumentException(name + " must be between 0.0 and 5.0");
+        if (score.compareTo(ZERO) < 0 || score.compareTo(TEN) > 0) {
+            throw new IllegalArgumentException(name + " must be between 0.00 and 10.00");
         }
-        if (score.remainder(HALF_POINT).compareTo(ZERO) != 0) {
-            throw new IllegalArgumentException(name + " must be a multiple of 0.5");
+        if (score.remainder(QUARTER_POINT).compareTo(ZERO) != 0) {
+            throw new IllegalArgumentException(name + " must be a multiple of 0.25");
         }
     }
 

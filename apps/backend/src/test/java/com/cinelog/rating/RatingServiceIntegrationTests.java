@@ -41,13 +41,13 @@ class RatingServiceIntegrationTests {
     void savesCompleteRatingAndMakesItActive() {
         WatchEntry watchEntry = createWatchEntry(createMovie(), LocalDate.of(2026, 6, 1), WatchType.FIRST_WATCH);
 
-        RatingResponse response = ratingService.saveOrUpdate(watchEntry.getId(), validRequest(new BigDecimal("5.0")));
+        RatingResponse response = ratingService.saveOrUpdate(watchEntry.getId(), validRequest(new BigDecimal("10.00")));
 
         Movie movie = movieRepository.findById(watchEntry.getMovie().getId()).orElseThrow();
-        assertThat(response.technicalScore()).isEqualByComparingTo("4.62");
-        assertThat(response.objectiveScore()).isEqualByComparingTo("4.56");
-        assertThat(response.displayScore()).isEqualByComparingTo("4.5");
-        assertThat(response.personalRankingScore()).isEqualByComparingTo("5.0");
+        assertThat(response.technicalScore()).isEqualByComparingTo("9.23");
+        assertThat(response.objectiveScore()).isEqualByComparingTo("9.13");
+        assertThat(response.displayScore()).isEqualByComparingTo("9.25");
+        assertThat(response.personalRankingScore()).isEqualByComparingTo("10.00");
         assertThat(response.ratingProfileVersion()).isEqualTo(1);
         assertThat(response.categoryNotes()).containsEntry("direction", "Precise");
         assertThat(movie.getActiveRating().getId()).isEqualTo(response.id());
@@ -57,13 +57,13 @@ class RatingServiceIntegrationTests {
     @Test
     void updatesExistingRatingWithoutCreatingHistoryDuplicate() {
         WatchEntry watchEntry = createWatchEntry(createMovie(), LocalDate.of(2026, 6, 1), WatchType.FIRST_WATCH);
-        RatingResponse initial = ratingService.saveOrUpdate(watchEntry.getId(), validRequest(new BigDecimal("5.0")));
+        RatingResponse initial = ratingService.saveOrUpdate(watchEntry.getId(), validRequest(new BigDecimal("10.00")));
 
-        RatingResponse updated = ratingService.saveOrUpdate(watchEntry.getId(), allScoresRequest("3.0", null));
+        RatingResponse updated = ratingService.saveOrUpdate(watchEntry.getId(), allScoresRequest("6.25", null));
 
         assertThat(updated.id()).isEqualTo(initial.id());
-        assertThat(updated.technicalScore()).isEqualByComparingTo("3.00");
-        assertThat(updated.personalRankingScore()).isEqualByComparingTo("3.0");
+        assertThat(updated.technicalScore()).isEqualByComparingTo("6.25");
+        assertThat(updated.personalRankingScore()).isEqualByComparingTo("6.25");
         assertThat(movieRatingRepository.count()).isEqualTo(1);
     }
 
@@ -127,15 +127,15 @@ class RatingServiceIntegrationTests {
 
     private SaveRatingRequest validRequest(BigDecimal personalFinalScore) {
         return new SaveRatingRequest(
-                new BigDecimal("5.0"),
-                new BigDecimal("4.5"),
-                new BigDecimal("4.5"),
-                new BigDecimal("4.0"),
-                new BigDecimal("4.5"),
-                new BigDecimal("4.0"),
-                new BigDecimal("5.0"),
-                new BigDecimal("4.5"),
-                new BigDecimal("5.0"),
+                new BigDecimal("10.00"),
+                new BigDecimal("9.00"),
+                new BigDecimal("9.00"),
+                new BigDecimal("8.00"),
+                new BigDecimal("9.00"),
+                new BigDecimal("8.00"),
+                new BigDecimal("10.00"),
+                new BigDecimal("9.00"),
+                new BigDecimal("10.00"),
                 personalFinalScore,
                 "Review",
                 "Private",
