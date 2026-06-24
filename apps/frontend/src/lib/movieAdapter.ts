@@ -16,6 +16,7 @@
 import type { Movie, MovieDetail, MockMovie } from '../types/movie';
 import type { MockWatchEntry } from '../types/watch';
 import type { RatingScores, RatingResponse } from '../types/rating';
+import type { ActorPerformance } from '../types/actor';
 import type { RankingItem, DashboardLatestWatch, DashboardRecentItem } from '../api/movies';
 import { derivePalette } from './posterPalette';
 
@@ -125,9 +126,34 @@ export function adaptMovieDetail(m: MovieDetail): MockMovie {
     technicalScore: m.activeRating?.technicalScore ?? 0,
     review: m.review ?? '',
     note: m.privateNote ?? '',
+    cast: m.cast ?? [],
+    rankingSummary: m.rankingSummary ?? null,
     watches: realWatches.length > 0
       ? realWatches
       : synthWatches(m.latestWatchedAt, m.watchCount),
+  };
+}
+
+/** Adapt an actor performance to a minimal MockMovie for navigation into DetailScreen
+ *  (which re-fetches full detail by id). Score fields come straight from the backend 0–10 scale. */
+export function adaptActorPerformance(p: ActorPerformance): MockMovie {
+  return {
+    id: String(p.movieId),
+    title: p.title,
+    year: p.releaseYear,
+    director: 'Unknown',
+    genres: [],
+    runtime: 0,
+    poster: derivePalette(p.title, p.releaseYear),
+    posterUrl: p.posterUrl,
+    rated: p.activeRating !== null,
+    scores: ZERO_SCORES,
+    personal: p.activeRating?.displayScore ?? 0,
+    objective: p.activeRating?.objectiveScore ?? 0,
+    technicalScore: p.activeRating?.technicalScore ?? 0,
+    review: '',
+    note: '',
+    watches: [],
   };
 }
 

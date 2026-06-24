@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { SafeAreaScreen, MovieCard, MoviePoster, RankingTabs, Icon, Stars } from '../components';
 import type { MockMovie } from '../types/movie';
-import { technical, fmt1 } from '../lib/scoring';
+import { technical, fmt1, fmtScore } from '../lib/scoring';
 import { CATEGORIES } from '../data/categories';
 import type { ScoreKey } from '../types/rating';
 import { getMovies } from '../api/movies';
@@ -105,6 +105,9 @@ export default function LibraryScreen({ onOpenMovie }: LibraryScreenProps) {
     sort === 'objective' ? 'OBJECTIVE' :
     CATEGORIES.find(c => c.key === sort)?.short.toUpperCase() ?? 'PERSONAL';
 
+  /* technical/objective are 2-decimal aggregates → 1-decimal; personal/category are quarter-step. */
+  const scorePrecise = sort !== 'technical' && sort !== 'objective';
+
   /* ── Loading ── */
   if (state === 'loading') {
     return (
@@ -206,7 +209,7 @@ export default function LibraryScreen({ onOpenMovie }: LibraryScreenProps) {
               <MoviePoster title={m.title} year={m.year} genres={m.genres} director={m.director} palette={m.poster} posterUrl={m.posterUrl} width={108} rounded={11} />
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 7 }}>
                 <Icon name="star" size={10} color="var(--star)" />
-                <span className="tnum" style={{ fontFamily: 'var(--font-display)', fontSize: 12.5, fontWeight: 600, color: 'var(--accent)' }}>{fmt1(scoreOf(m))}</span>
+                <span className="tnum" style={{ fontFamily: 'var(--font-display)', fontSize: 12.5, fontWeight: 600, color: 'var(--accent)' }}>{scorePrecise ? fmtScore(scoreOf(m)) : fmt1(scoreOf(m))}</span>
               </div>
             </button>
           ))}
@@ -214,7 +217,7 @@ export default function LibraryScreen({ onOpenMovie }: LibraryScreenProps) {
       ) : (
         <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {list.map((m, i) => (
-            <MovieCard key={m.id} movie={m} onOpen={() => onOpenMovie(m)} score={scoreOf(m)} scoreLabel={scoreLabel} delay={i * 40} />
+            <MovieCard key={m.id} movie={m} onOpen={() => onOpenMovie(m)} score={scoreOf(m)} scoreLabel={scoreLabel} scorePrecise={scorePrecise} delay={i * 40} />
           ))}
         </div>
       )}

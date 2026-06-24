@@ -20,6 +20,10 @@ export interface RatingCategory {
   short: string;
   weight: number;
   desc: string;
+  /** Category glyph (see Icon component). */
+  icon: import('../components/Icon').IconName;
+  /** Subtle per-category accent. Used at low intensity — amber stays dominant. */
+  color: string;
 }
 
 /* Backend rating response (GET/PUT /api/watch-entries/{id}/rating) */

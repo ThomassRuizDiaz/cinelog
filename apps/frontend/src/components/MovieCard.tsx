@@ -1,7 +1,7 @@
 import MoviePoster from './MoviePoster';
 import Stars from './Stars';
 import Icon from './Icon';
-import { fmt1, roundHalf } from '../lib/scoring';
+import { fmt1, fmtScore, roundHalf } from '../lib/scoring';
 import type { MockMovie } from '../types/movie';
 
 interface MovieCardProps {
@@ -9,10 +9,12 @@ interface MovieCardProps {
   onOpen: () => void;
   score?: number;
   scoreLabel?: string;
+  /** Quarter-precision (personal/category) when true; 1-decimal (technical/objective aggregates) when false. */
+  scorePrecise?: boolean;
   delay?: number;
 }
 
-export default function MovieCard({ movie, onOpen, score, scoreLabel, delay = 0 }: MovieCardProps) {
+export default function MovieCard({ movie, onOpen, score, scoreLabel, scorePrecise = true, delay = 0 }: MovieCardProps) {
   const sval = score != null ? score : movie.personal;
   const isRated = movie.rated || sval > 0;
   const lastWatch = movie.watches[0];
@@ -53,7 +55,7 @@ export default function MovieCard({ movie, onOpen, score, scoreLabel, delay = 0 
           {isRated ? (
             <>
               <Stars value={roundHalf(sval)} size={13} />
-              <span className="tnum" style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 600, color: 'var(--accent)' }}>{fmt1(sval)}</span>
+              <span className="tnum" style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 600, color: 'var(--accent)' }}>{scorePrecise ? fmtScore(sval) : fmt1(sval)}</span>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-faint)', letterSpacing: '0.06em' }}>
                 {scoreLabel ?? 'PERSONAL'}
               </span>

@@ -5,7 +5,7 @@ import {
 } from '../components';
 import type { TabId } from '../components';
 import type { MockMovie } from '../types/movie';
-import { fmt1 } from '../lib/scoring';
+import { fmt1, fmtScore } from '../lib/scoring';
 import { getDashboard } from '../api/movies';
 import { ApiError } from '../api/errors';
 import { useAuth } from '../contexts/AuthContext';
@@ -237,10 +237,10 @@ export default function HomeScreen({ onOpenMovie, onTabChange, onSettings }: Hom
       {/* stats plaques */}
       <div style={{ padding: '16px 16px 4px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8 }}>
         {[
-          { n: d.films,              l: 'Films' },
-          { n: d.watches,            l: 'Watches' },
-          { n: d.avgP > 0 ? fmt1(d.avgP) : '—', l: 'Avg Pers.' },
-          { n: d.avgT > 0 ? fmt1(d.avgT) : '—', l: 'Avg Tech.' },
+          { n: d.films,              l: 'Películas' },
+          { n: d.watches,            l: 'Visionados' },
+          { n: d.avgP > 0 ? fmt1(d.avgP) : '—', l: 'Media pers.' },
+          { n: d.avgT > 0 ? fmt1(d.avgT) : '—', l: 'Media téc.' },
         ].map((s, i) => (
           <div key={i} style={{ background: 'linear-gradient(160deg, var(--ink-800), var(--ink-850))', border: '1px solid var(--line)', borderRadius: 15, padding: '12px 8px 10px', textAlign: 'center', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.03)' }}>
             <div className="tnum display" style={{ fontSize: 22, fontWeight: 700, color: 'var(--accent)', lineHeight: 1 }}>{s.n}</div>
@@ -264,7 +264,7 @@ export default function HomeScreen({ onOpenMovie, onTabChange, onSettings }: Hom
                 </span>
                 <span style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 5, marginTop: 9, paddingLeft: 2 }}>
                   <Icon name="star" size={11} color="var(--star)" />
-                  <span className="tnum" style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 600, color: 'var(--accent)' }}>{fmt1(m.personal)}</span>
+                  <span className="tnum" style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 600, color: 'var(--accent)' }}>{fmtScore(m.personal)}</span>
                 </span>
               </button>
             ))}

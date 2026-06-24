@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   MoviePoster, ScoreBadge, Stars, GenreChips, ScoreConstellation,
-  WatchTimeline, WatchMeta, MovieCard, RatingScaleControl, Icon,
+  WatchTimeline, WatchMeta, MovieCard, RatingScaleControl, RatingCompleteOverlay,
+  SearchInput, ActorAvatar, Icon,
 } from '../components';
 import type { MockMovie, ExternalMovieResult, PosterPalette } from '../types/movie';
 import type { RatingScores } from '../types/rating';
@@ -9,7 +10,7 @@ import type { WatchType, WatchLocation } from '../types/watch';
 import type { WatchlistItem } from '../types/watchlist';
 import { RANKING_MODES } from '../data/rankings';
 import { CATEGORIES } from '../data/categories';
-import { technical, roundHalf, fmt, fmt1, fmtScore, fmtDate } from '../lib/scoring';
+import { technical, roundHalf, roundQuarter, fmt, fmt1, fmtScore, fmtDate } from '../lib/scoring';
 import {
   getDashboard, getMovies, getRankings, getMovieDetail,
   RANKING_MODE_MAP, deleteMovie, searchExternalMovies,
@@ -21,14 +22,29 @@ import {
 } from '../api/watchlist';
 import {
   adaptMovie, adaptMovieDetail, adaptRankingItem,
-  adaptDashboardLatestWatch, adaptRatingScores, ZERO_SCORES,
+  adaptDashboardLatestWatch, adaptRatingScores, adaptActorPerformance, ZERO_SCORES,
 } from '../lib/movieAdapter';
+import { getActors, getActorDetail } from '../api/actors';
+import type { ActorListItem, ActorDetail, ActorPerformance } from '../types/actor';
 import { derivePalette } from '../lib/posterPalette';
 import { ApiError } from '../api/errors';
 import { useAuth } from '../contexts/AuthContext';
 import GptExportScreen from './GptExportScreen';
 
-type DesktopNav = 'home' | 'library' | 'watchlist' | 'rankings';
+type DesktopNav = 'home' | 'library' | 'actors' | 'watchlist' | 'rankings';
+
+/* First full-rating save of the session gets the celebratory sparkle burst. */
+let deskCelebrated = false;
+
+/** Plain-Spanish phrasing for the metric a movie is ranked by (avoids backend jargon). */
+function rankDriverEs(label: string): string {
+  const map: Record<string, string> = {
+    Personal: 'su media personal',
+    Technical: 'su media técnica',
+    Objective: 'su media objetiva',
+  };
+  return map[label] ?? `“${label}”`;
+}
 
 interface DeskSelectedFilm {
   movieId: number | null;
@@ -56,12 +72,21 @@ function DeskRating({ movie, watchEntryId, onClose, onSave }: {
 }) {
   const { signOut } = useAuth();
   const [scores, setScores] = useState<RatingScores>({ ...movie.scores });
-  const [override, setOverride] = useState(Math.abs(movie.personal - roundHalf(technical(movie.scores))) > 0.01);
+  const [override, setOverride] = useState(Math.abs(movie.personal - roundQuarter(technical(movie.scores))) > 0.01);
   const [personal, setPersonal] = useState(movie.personal);
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const tech = technical(scores), vis = roundHalf(tech);
+  const isFirstCelebration = useRef(false);
+  const tech = technical(scores), vis = roundQuarter(tech);
   const finalScore = override ? personal : vis;
+
+  const finishSave = () => {
+    isFirstCelebration.current = !deskCelebrated;
+    deskCelebrated = true;
+    setSaved(true);
+    setTimeout(onSave, 1500);
+  };
 
   const doSave = async () => {
     if (saving) return;
@@ -70,13 +95,13 @@ function DeskRating({ movie, watchEntryId, onClose, onSave }: {
       setSaving(true);
       try {
         await saveRating(watchEntryId, buildSaveRatingRequest(scores, { personalFinalScore: override ? personal : undefined }));
-        setSaving(false); onSave();
+        setSaving(false); finishSave();
       } catch (err) {
         setSaving(false);
         if (err instanceof ApiError && err.isUnauthorized) { void signOut(); return; }
         setSaveError(err instanceof ApiError ? err.message : 'Error al guardar. Inténtalo de nuevo.');
       }
-    } else { onSave(); }
+    } else { finishSave(); }
   };
 
   return (
@@ -93,26 +118,40 @@ function DeskRating({ movie, watchEntryId, onClose, onSave }: {
             </div>
             <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
               <Stars value={vis} size={15} />
-              <span className="tnum" style={{ fontFamily: 'var(--font-display)', fontWeight: 600 }}>{fmt1(vis)} visible</span>
+              <span className="tnum" style={{ fontFamily: 'var(--font-display)', fontWeight: 600 }}>{fmtScore(vis)} visible</span>
             </div>
           </div>
         </div>
         <div className="cl-scroll" style={{ position: 'relative', flex: 1, padding: 22 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {CATEGORIES.map(c => (
-              <div key={c.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, padding: '11px 14px', borderRadius: 13, background: 'var(--ink-820)', border: '1px solid var(--line)' }}>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                    <span style={{ fontFamily: 'var(--font-display)', fontSize: 14.5, fontWeight: 600 }}>{c.label}</span>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 7.5, color: 'var(--text-faint)', border: '1px solid var(--line)', borderRadius: 4, padding: '1px 4px' }}>{c.weight}%</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {CATEGORIES.map(c => {
+              const sc = scores[c.key] > 0;
+              return (
+              <div key={c.key} style={{ padding: '13px 15px', borderRadius: 14, background: sc ? `linear-gradient(152deg, ${c.color}12, var(--ink-820) 58%)` : 'var(--ink-820)', border: sc ? `1px solid ${c.color}30` : '1px solid var(--line)', transition: 'background var(--dur) var(--ease-out), border-color var(--dur) var(--ease-out)' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 11, minWidth: 0 }}>
+                    <span style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, marginTop: 1, display: 'grid', placeItems: 'center', background: `linear-gradient(150deg, ${c.color}33, ${c.color}0f)`, border: `1px solid ${c.color}55`, boxShadow: sc ? `0 0 14px -5px ${c.color}` : 'none' }}>
+                      <Icon name={c.icon} size={20} color={c.color} stroke={1.9} />
+                    </span>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 600, lineHeight: 1.18 }}>{c.label}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 5 }}>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 7.5, color: c.color, border: `1px solid ${c.color}45`, borderRadius: 4, padding: '1px 5px' }}>{c.weight}%</span>
+                        <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>{c.desc}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 2 }}>{c.desc}</div>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <span className="display tnum" style={{ fontSize: 22, fontWeight: 800, color: sc ? 'var(--accent)' : 'var(--text-ghost)', lineHeight: 1 }}>{sc ? fmtScore(scores[c.key]) : '—'}</span>
+                    <span style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: 7, color: 'var(--text-faint)', letterSpacing: '0.12em', marginTop: 3 }}>/ 10</span>
+                  </div>
                 </div>
-                <div style={{ flexShrink: 0 }}>
-                  <RatingScaleControl value={scores[c.key]} onChange={v => setScores(s => ({ ...s, [c.key]: v }))} starSize={14} starGap={2} />
+                <div style={{ marginTop: 13 }}>
+                  <RatingScaleControl value={scores[c.key]} onChange={v => setScores(s => ({ ...s, [c.key]: v }))} starSize={24} icon={c.icon} stacked />
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
           <div style={{ marginTop: 12, padding: '13px 15px', borderRadius: 13, background: 'var(--ink-820)', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
@@ -121,7 +160,7 @@ function DeskRating({ movie, watchEntryId, onClose, onSave }: {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               {override && (
-                <RatingScaleControl value={personal} onChange={setPersonal} starSize={14} />
+                <RatingScaleControl value={personal} onChange={setPersonal} starSize={18} />
               )}
               <button className="cl-tap" onClick={() => setOverride(o => !o)} style={{ border: 'none', background: 'none', padding: 0 }}>
                 <span style={{ width: 44, height: 26, borderRadius: 20, background: override ? 'var(--accent)' : 'var(--ink-680)', display: 'block', position: 'relative' }}>
@@ -139,16 +178,20 @@ function DeskRating({ movie, watchEntryId, onClose, onSave }: {
           </div>
         </div>
       </div>
+
+      {/* cinematic save-complete moment */}
+      {saved && <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', inset: 0, borderRadius: 24, overflow: 'hidden' }}><RatingCompleteOverlay finalScore={finalScore} celebrate={isFirstCelebration.current} /></div>}
     </div>
   );
 }
 
 /* ── Desk Detail drawer ───────────────────────────────────────────────────── */
-function DeskDetail({ movie: initialMovie, onClose, onRate, onDeleted, onLogWatch }: {
+function DeskDetail({ movie: initialMovie, onClose, onRate, onDeleted, onLogWatch, onOpenActor }: {
   movie: MockMovie; onClose: () => void;
   onRate: (movie: MockMovie, watchEntryId?: number) => void;
   onDeleted?: () => void;
   onLogWatch?: (movie: MockMovie) => void;
+  onOpenActor?: (actorId: number) => void;
 }) {
   const { signOut } = useAuth();
   const [movie, setMovie] = useState(initialMovie);
@@ -251,8 +294,11 @@ function DeskDetail({ movie: initialMovie, onClose, onRate, onDeleted, onLogWatc
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 18 }}>
             {CATEGORIES.map(c => (
               <div key={c.key} style={{ padding: '10px 12px', borderRadius: 12, background: 'var(--ink-820)', border: '1px solid var(--line)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                  <span style={{ fontSize: 12, fontWeight: 600 }}>{c.short}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                    <Icon name={c.icon} size={13} color={c.color} stroke={1.8} />
+                    <span style={{ fontSize: 12, fontWeight: 600 }}>{c.short}</span>
+                  </span>
                   <span className="display tnum" style={{ fontSize: 14, fontWeight: 700, color: 'var(--accent)' }}>{fmtScore(movie.scores[c.key])}</span>
                 </div>
                 <div style={{ marginTop: 7, height: 3.5, borderRadius: 3, background: 'var(--ink-680)', overflow: 'hidden' }}>
@@ -261,9 +307,150 @@ function DeskDetail({ movie: initialMovie, onClose, onRate, onDeleted, onLogWatc
               </div>
             ))}
           </div>
+
+          {/* ranking summary */}
+          {movie.rankingSummary && (
+            <div style={{ marginTop: 18, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 11, background: 'var(--ink-820)', border: '1px solid var(--line)', fontFamily: 'var(--font-mono)', fontSize: 10.5, color: 'var(--text-dim)' }}>
+                <Icon name="rankings" size={13} color="var(--accent)" /> En rankings se ordena por {rankDriverEs(movie.rankingSummary.scoreLabel)}
+              </span>
+              {movie.rankingSummary.latestWatchedAt && (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 11, background: 'var(--ink-820)', border: '1px solid var(--line)', fontFamily: 'var(--font-mono)', fontSize: 10.5, color: 'var(--text-faint)' }}>
+                  <Icon name="calendar" size={13} color="var(--text-faint)" /> Último visionado · {fmtDate(movie.rankingSummary.latestWatchedAt)}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* cast */}
+          {movie.cast && movie.cast.length > 0 && (
+            <>
+              <div className="eyebrow" style={{ margin: '24px 0 12px' }}>Reparto</div>
+              <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
+                {[...movie.cast].sort((a, b) => a.castOrder - b.castOrder).map(member => (
+                  <button
+                    key={`${member.actorId}-${member.castOrder}`}
+                    className="pressable cl-tap"
+                    onClick={() => onOpenActor?.(member.actorId)}
+                    style={{ flexShrink: 0, width: 104, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '14px 8px', borderRadius: 14, border: '1px solid var(--line)', background: 'var(--ink-820)', color: 'var(--text)', textAlign: 'center', cursor: 'pointer' }}
+                  >
+                    <ActorAvatar name={member.name} profileUrl={member.profileUrl} size={56} />
+                    <span style={{ minWidth: 0, width: '100%' }}>
+                      <span className="display" style={{ display: 'block', fontSize: 12.5, fontWeight: 600, lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.name}</span>
+                      {member.characterName && (
+                        <span style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: 8.5, color: 'var(--text-faint)', marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.characterName}</span>
+                      )}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
           <div className="eyebrow" style={{ margin: '24px 0 12px' }}>Historial de visionados</div>
           <div style={{ paddingBottom: 30 }}><WatchTimeline movie={movie} /></div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Desk Actor detail drawer ─────────────────────────────────────────────── */
+function DeskActorDetail({ actorId, onClose, onOpenMovie }: {
+  actorId: number;
+  onClose: () => void;
+  onOpenMovie: (movie: MockMovie) => void;
+}) {
+  const { signOut } = useAuth();
+  const [actor, setActor] = useState<ActorDetail | null>(null);
+  const [state, setState] = useState<'loading' | 'loaded' | 'error'>('loading');
+
+  useEffect(() => {
+    setState('loading');
+    getActorDetail(actorId)
+      .then(res => { setActor(res); setState('loaded'); })
+      .catch(err => {
+        if (err instanceof ApiError && err.isUnauthorized) { void signOut(); return; }
+        setState('error');
+      });
+  }, [actorId, signOut]);
+
+  const performances: ActorPerformance[] = [...(actor?.performances ?? [])].sort((a, b) => a.castOrder - b.castOrder);
+
+  return (
+    <div onClick={onClose} style={{ position: 'absolute', inset: 0, zIndex: 72, display: 'flex', justifyContent: 'flex-end', background: 'rgba(6,6,9,0.6)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', animation: 'fadeIn 240ms ease both' }}>
+      <div onClick={e => e.stopPropagation()} className="cl-scroll" style={{ position: 'relative', width: 460, height: '100%', background: 'var(--ink-870)', borderLeft: '1px solid var(--line-strong)', animation: 'deskDrawer 360ms var(--ease-out) both', padding: '26px 26px 40px' }}>
+        <button className="pressable cl-tap" onClick={onClose} style={{ position: 'absolute', top: 20, right: 20, width: 36, height: 36, borderRadius: 11, border: '1px solid var(--line-strong)', background: 'var(--ink-800)', color: 'var(--text)', display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
+          <Icon name="close" size={18} color="currentColor" />
+        </button>
+
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16 }}>
+          <ActorAvatar name={actor?.name ?? 'Actor'} profileUrl={actor?.profileUrl} shape="portrait" size={88} rounded={16} />
+          <div style={{ minWidth: 0, paddingRight: 30, paddingBottom: 6 }}>
+            <div className="eyebrow" style={{ marginBottom: 8 }}>Contextos de actuación</div>
+            <div className="display" style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.05 }}>{actor?.name ?? 'Actor'}</div>
+            {actor && <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: 'var(--text-faint)', letterSpacing: '0.04em', marginTop: 8 }}>{performances.length} {performances.length === 1 ? 'película en tu archivo' : 'películas en tu archivo'}</div>}
+          </div>
+        </div>
+
+        {state === 'loading' && (
+          <div style={{ marginTop: 26, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {[1, 2, 3].map(i => <div key={i} style={{ height: 84, borderRadius: 14, background: 'var(--ink-820)', animation: `glowPulse 1.8s ease ${i * 100}ms infinite` }} />)}
+          </div>
+        )}
+
+        {state === 'error' && (
+          <div style={{ marginTop: 40, textAlign: 'center', fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 14, color: 'var(--text-faint)' }}>
+            No se pudo cargar este actor.
+          </div>
+        )}
+
+        {state === 'loaded' && actor && (
+          <div style={{ marginTop: 26 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
+              <span className="eyebrow">Películas en tu archivo</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-faint)' }}>{performances.length}</span>
+            </div>
+            {performances.length === 0 ? (
+              <div style={{ padding: '20px 16px', borderRadius: 14, background: 'var(--ink-820)', border: '1px solid var(--line)', textAlign: 'center', fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 14, color: 'var(--text-faint)' }}>
+                Sin películas registradas para este actor.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+                {performances.map(p => (
+                  <button
+                    key={`${p.movieId}-${p.castOrder}`}
+                    className="pressable cl-tap"
+                    onClick={() => onOpenMovie(adaptActorPerformance(p))}
+                    style={{ display: 'flex', gap: 13, padding: 11, borderRadius: 14, border: '1px solid var(--line)', background: 'var(--ink-820)', color: 'var(--text)', textAlign: 'left', cursor: 'pointer', alignItems: 'stretch' }}
+                  >
+                    <MoviePoster title={p.title} year={p.releaseYear} genres={[]} director="Unknown" palette={derivePalette(p.title, p.releaseYear)} posterUrl={p.posterUrl} width={52} rounded={9} />
+                    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', paddingTop: 1 }}>
+                      <div>
+                        <div className="display" style={{ fontSize: 15, fontWeight: 600, lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.title}{p.releaseYear ? ` (${p.releaseYear})` : ''}</div>
+                        {p.characterName && (
+                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-dim)', marginTop: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            <span style={{ color: 'var(--text-faint)' }}>Personaje · </span>{p.characterName}
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                        {p.activeRating ? (
+                          <>
+                            <Stars value={p.activeRating.displayScore} size={12} />
+                            <span className="tnum" style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 600, color: 'var(--accent)' }}>{fmtScore(p.activeRating.displayScore)}</span>
+                          </>
+                        ) : (
+                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-ghost)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Sin puntuar</span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -577,6 +764,10 @@ export default function DesktopView() {
 
   const [nav, setNav] = useState<DesktopNav>('home');
   const [detail, setDetail] = useState<MockMovie | null>(null);
+  const [actorId, setActorId] = useState<number | null>(null);
+  const [actors, setActors] = useState<ActorListItem[]>([]);
+  const [actorsLoad, setActorsLoad] = useState<'idle' | 'loading' | 'loaded' | 'error'>('idle');
+  const [actorsQuery, setActorsQuery] = useState('');
   const [rating, setRating] = useState<MockMovie | null>(null);
   const [ratingWatchEntryId, setRatingWatchEntryId] = useState<number | null>(null);
   const [mode, setMode] = useState('personal');
@@ -632,6 +823,21 @@ export default function DesktopView() {
         setWatchlistLoad('error');
       });
   }, [nav, signOut, wlKey]);
+
+  /* Actors — fetch when tab is active (debounced on search). */
+  useEffect(() => {
+    if (nav !== 'actors') return;
+    setActorsLoad('loading');
+    const timer = setTimeout(() => {
+      getActors({ query: actorsQuery.trim() || undefined, size: 100 })
+        .then(items => { setActors(items); setActorsLoad('loaded'); })
+        .catch(err => {
+          if (err instanceof ApiError && err.isUnauthorized) { void signOut(); return; }
+          setActorsLoad('error');
+        });
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [nav, actorsQuery, signOut, refreshKey]);
 
   /* Watchlist delete */
   const handleWlDelete = useCallback(async (id: number) => {
@@ -698,9 +904,10 @@ export default function DesktopView() {
 
   const modeObj = RANKING_MODES.find(r => r.id === mode) ?? RANKING_MODES[0];
 
-  const navItems: { id: DesktopNav; icon: 'home' | 'library' | 'watchlist' | 'rankings'; l: string }[] = [
+  const navItems: { id: DesktopNav; icon: 'home' | 'library' | 'actors' | 'watchlist' | 'rankings'; l: string }[] = [
     { id: 'home', icon: 'home', l: 'Home' },
     { id: 'library', icon: 'library', l: 'Library' },
+    { id: 'actors', icon: 'actors', l: 'Actores' },
     { id: 'watchlist', icon: 'watchlist', l: 'Watchlist' },
     { id: 'rankings', icon: 'rankings', l: 'Rankings' },
   ];
@@ -874,6 +1081,62 @@ export default function DesktopView() {
             </div>
           )}
 
+          {/* ACTORS */}
+          {nav === 'actors' && (
+            <div style={{ animation: 'fadeIn 320ms ease both' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 18 }}>
+                <div>
+                  <div className="eyebrow" style={{ marginBottom: 6 }}>{actorsLoad === 'loaded' ? `${actors.length} en tu archivo` : 'Reparto'}</div>
+                  <div className="display" style={{ fontSize: 30, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 0.95 }}>Actores</div>
+                </div>
+                <div style={{ width: 320, maxWidth: '40%' }}>
+                  <SearchInput value={actorsQuery} onChange={setActorsQuery} onClear={() => setActorsQuery('')} placeholder="Buscar un actor…" />
+                </div>
+              </div>
+
+              {actorsLoad === 'loading' && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 16 }}>
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <div key={i} style={{ aspectRatio: '2 / 3', borderRadius: 16, background: 'var(--ink-820)', animation: `glowPulse 1.8s ease ${i * 70}ms infinite` }} />)}
+                </div>
+              )}
+
+              {actorsLoad === 'error' && (
+                <div style={{ padding: '40px 0', textAlign: 'center' }}>
+                  <div className="display" style={{ fontSize: 18, color: 'var(--text-dim)' }}>No se pudieron cargar los actores.</div>
+                  <button className="pressable cl-tap" onClick={() => setRefreshKey(k => k + 1)} style={{ marginTop: 18, border: '1px solid var(--line-amber)', borderRadius: 13, padding: '11px 24px', background: 'rgba(232,185,116,0.1)', color: 'var(--accent)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>Reintentar</button>
+                </div>
+              )}
+
+              {actorsLoad === 'loaded' && actors.length === 0 && (
+                <div style={{ padding: '50px 0', textAlign: 'center' }}>
+                  <div className="display" style={{ fontSize: 18, color: 'var(--text-dim)' }}>{actorsQuery.trim() ? 'Sin coincidencias' : 'Aún no hay actores'}</div>
+                  <div style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 14, color: 'var(--text-faint)', marginTop: 8 }}>
+                    {actorsQuery.trim() ? 'Prueba con otro nombre.' : 'Aparecerán cuando importes películas con reparto.'}
+                  </div>
+                </div>
+              )}
+
+              {actorsLoad === 'loaded' && actors.length > 0 && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 16 }}>
+                  {actors.map((a, i) => (
+                    <button key={a.id} className="pressable cl-tap" onClick={() => setActorId(a.id)} style={{ position: 'relative', display: 'block', width: '100%', padding: 0, border: 'none', background: 'none', color: 'var(--text)', textAlign: 'left', borderRadius: 16, cursor: 'pointer', animation: `fadeUp 440ms var(--ease-out) ${Math.min(i, 16) * 26}ms both` }}>
+                      <ActorAvatar name={a.name} profileUrl={a.profileUrl} shape="portrait" fill rounded={16} />
+                      <div style={{ position: 'absolute', left: 13, right: 13, bottom: 12, pointerEvents: 'none' }}>
+                        <div className="display" style={{ fontSize: 15.5, fontWeight: 700, lineHeight: 1.12, textShadow: '0 1px 6px rgba(0,0,0,0.7)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{a.name}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 5 }}>
+                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, color: 'var(--accent-bright)', letterSpacing: '0.04em', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{a.performanceCount} {a.performanceCount === 1 ? 'actuación' : 'actuaciones'}</span>
+                          <span style={{ width: 24, height: 24, borderRadius: '50%', display: 'grid', placeItems: 'center', background: 'rgba(20,20,26,0.7)', border: '1px solid var(--line-amber)' }}>
+                            <Icon name="chevron" size={14} color="var(--accent)" />
+                          </span>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* WATCHLIST */}
           {nav === 'watchlist' && (
             <div style={{ animation: 'fadeIn 320ms ease both' }}>
@@ -1003,6 +1266,16 @@ export default function DesktopView() {
           onRate={(m, watchEntryId) => { setDetail(null); setRating(m); setRatingWatchEntryId(watchEntryId ?? null); }}
           onDeleted={() => { setDetail(null); refresh(); }}
           onLogWatch={(m) => { setDetail(null); setLogWatchMovie(m); setAddOpen(true); }}
+          onOpenActor={(id) => setActorId(id)}
+        />
+      )}
+
+      {/* Actor detail (above movie detail) */}
+      {actorId != null && (
+        <DeskActorDetail
+          actorId={actorId}
+          onClose={() => setActorId(null)}
+          onOpenMovie={(m) => { setActorId(null); setDetail(m); }}
         />
       )}
 

@@ -16,8 +16,18 @@ export function roundHalf(v: number): number {
   return Math.round(v * 2) / 2;
 }
 
+/**
+ * Round to the nearest 0.25 — mirrors the backend's authoritative
+ * `displayScore = round(technicalScore / 0.25) * 0.25`. Use this for any
+ * calculated-score preview so the frontend never shows a value the backend
+ * would round differently (e.g. 9.13 → 9.25, not 9.0).
+ */
+export function roundQuarter(v: number): number {
+  return Math.round(v * 4) / 4;
+}
+
 export function visible(scores: RatingScores): number {
-  return roundHalf(technical(scores));
+  return roundQuarter(technical(scores));
 }
 
 export function rankValue(movie: MockMovie, source: string): number {

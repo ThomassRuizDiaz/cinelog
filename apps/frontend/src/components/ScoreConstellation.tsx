@@ -1,5 +1,5 @@
 import { CATEGORIES } from '../data/categories';
-import { fmt1 } from '../lib/scoring';
+import { fmtScore } from '../lib/scoring';
 import type { RatingScores, ScoreKey } from '../types/rating';
 
 interface ScoreConstellationProps {
@@ -28,8 +28,18 @@ export default function ScoreConstellation({ scores, size = 260, showLabels = tr
 
   const poly = pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
 
+  /* Pad the viewBox horizontally when labels show so the longest category
+   * labels (e.g. "PERFORMANCES 9.25") scale to fit instead of clipping. */
+  const padX = showLabels ? size * 0.17 : 0;
+  const padY = showLabels ? size * 0.03 : 0;
+
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ overflow: 'visible' }}>
+    <svg
+      width={size}
+      height={size}
+      viewBox={`${-padX} ${-padY} ${size + padX * 2} ${size + padY * 2}`}
+      style={{ overflow: 'visible', display: 'block' }}
+    >
       <defs>
         <radialGradient id="constFill" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.42" />
@@ -89,7 +99,7 @@ export default function ScoreConstellation({ scores, size = 260, showLabels = tr
             style={{ fontFamily: 'var(--font-mono)', fontSize: size * 0.035, letterSpacing: '0.04em', textTransform: 'uppercase', fill: on ? 'var(--accent-bright)' : 'var(--text-dim)', fontWeight: on ? 600 : 400 }}
           >
             {p.c.short}
-            <tspan dx="4" style={{ fill: 'var(--text-faint)' }}>{fmt1(p.sc)}</tspan>
+            <tspan dx="4" style={{ fill: 'var(--text-faint)' }}>{fmtScore(p.sc)}</tspan>
           </text>
         );
       })}

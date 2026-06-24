@@ -1,4 +1,5 @@
 import type { ActiveRating, RatingScores } from './rating';
+import type { CastMember, RankingSummary } from './actor';
 import type { MockWatchEntry, WatchEntry } from './watch';
 
 /* Re-export for convenience */
@@ -32,6 +33,10 @@ export interface MovieDetail extends Movie {
   review: string | null;
   privateNote: string | null;
   watchEntries: WatchEntry[];
+  /** Ordered cast (by castOrder). May be absent/empty for movies without cast data. */
+  cast?: CastMember[];
+  /** Per-movie ranking summary. Null/absent when the movie is unrated. */
+  rankingSummary?: RankingSummary | null;
 }
 
 /* External search result from GET /api/external/movies/search */
@@ -74,4 +79,8 @@ export interface MockMovie {
   review: string;
   note: string;
   watches: MockWatchEntry[];
+  /** Cast from movie detail. Absent until detail is fetched. */
+  cast?: CastMember[];
+  /** Ranking summary from movie detail. Absent until detail is fetched. */
+  rankingSummary?: RankingSummary | null;
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { technical, roundHalf, visible, fmt, fmt1, fmtScore } from './scoring';
+import { technical, roundHalf, roundQuarter, visible, fmt, fmt1, fmtScore } from './scoring';
 import { CATEGORIES, TOTAL_WEIGHT } from '../data/categories';
 import type { RatingScores } from '../types/rating';
 
@@ -47,10 +47,18 @@ describe('roundHalf()', () => {
   it('rounds 0.0 → 0.0', () => expect(roundHalf(0.0)).toBe(0.0));
 });
 
+describe('roundQuarter()', () => {
+  /* Mirrors backend displayScore = round(technicalScore / 0.25) * 0.25 (scoring-rules.md). */
+  it('rounds 9.10 → 9.00', () => expect(roundQuarter(9.10)).toBe(9.0));
+  it('rounds 9.13 → 9.25', () => expect(roundQuarter(9.13)).toBe(9.25));
+  it('rounds 9.37 → 9.25', () => expect(roundQuarter(9.37)).toBe(9.25));
+  it('rounds 9.38 → 9.50', () => expect(roundQuarter(9.38)).toBe(9.5));
+});
+
 describe('visible()', () => {
   it('perfect scores → 10', () => expect(visible(perfect)).toBe(10));
-  it('is roundHalf of technical', () => {
-    expect(visible(half)).toBe(roundHalf(technical(half)));
+  it('is roundQuarter of technical (matches backend displayScore)', () => {
+    expect(visible(half)).toBe(roundQuarter(technical(half)));
   });
 });
 

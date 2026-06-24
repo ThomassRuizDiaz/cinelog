@@ -7,6 +7,8 @@ import LibraryScreen from './screens/LibraryScreen';
 import WatchlistScreen from './screens/WatchlistScreen';
 import RankingsScreen from './screens/RankingsScreen';
 import AddScreen from './screens/AddScreen';
+import ActorsScreen from './screens/ActorsScreen';
+import ActorDetailScreen from './screens/ActorDetailScreen';
 import DetailScreen from './screens/DetailScreen';
 import RatingScreen from './screens/RatingScreen';
 import SettingsScreen from './screens/SettingsScreen';
@@ -31,6 +33,7 @@ export default function App() {
 
   const [tab, setTab] = useState<TabId>('home');
   const [detailMovie, setDetailMovie] = useState<MockMovie | null>(null);
+  const [actorDetailId, setActorDetailId] = useState<number | null>(null);
   const [ratingMovie, setRatingMovie] = useState<MockMovie | null>(null);
   const [ratingWatchEntryId, setRatingWatchEntryId] = useState<number | null>(null);
   const [ratingSource, setRatingSource] = useState<'add' | 'detail' | null>(null);
@@ -78,6 +81,7 @@ export default function App() {
 
   const handleTabChange = useCallback((t: TabId) => {
     setDetailMovie(null);
+    setActorDetailId(null);
     setRatingMovie(null);
     setRatingWatchEntryId(null);
     setRatingSource(null);
@@ -88,6 +92,16 @@ export default function App() {
   }, []);
 
   const handleOpenMovie = useCallback((movie: MockMovie) => {
+    setDetailMovie(movie);
+  }, []);
+
+  const handleOpenActor = useCallback((id: number) => {
+    setActorDetailId(id);
+  }, []);
+
+  /* From an actor's performance → open that movie's detail; close the actor layer. */
+  const handleOpenMovieFromActor = useCallback((movie: MockMovie) => {
+    setActorDetailId(null);
     setDetailMovie(movie);
   }, []);
 
@@ -180,6 +194,9 @@ export default function App() {
     case 'library':
       tabScreen = <LibraryScreen onOpenMovie={handleOpenMovie} />;
       break;
+    case 'actors':
+      tabScreen = <ActorsScreen onOpenActor={handleOpenActor} />;
+      break;
     case 'watchlist':
       tabScreen = (
         <WatchlistScreen
@@ -249,11 +266,28 @@ export default function App() {
           zIndex={42}
           render={movie => (
             <DetailScreen
+              key={movie.id}
               movie={movie}
               onBack={() => setDetailMovie(null)}
               onRate={handleRate}
               onLogWatch={handleLogWatch}
               onDeleted={handleMovieDeleted}
+              onOpenActor={handleOpenActor}
+            />
+          )}
+        />
+
+        {/* actor detail (push, above movie detail) */}
+        <ScreenLayer
+          content={actorDetailId}
+          anim="push"
+          zIndex={50}
+          render={id => (
+            <ActorDetailScreen
+              key={id}
+              actorId={id}
+              onBack={() => setActorDetailId(null)}
+              onOpenMovie={handleOpenMovieFromActor}
             />
           )}
         />
